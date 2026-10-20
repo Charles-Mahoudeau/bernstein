@@ -1,0 +1,39 @@
+# Naming contract (shared by every template):
+#   release:   poll-app (helm install poll-app ... --namespace poll)
+#   namespace: poll
+# Release and namespace are helm arguments, not values: templates read them
+# with .Release.Name and .Release.Namespace.
+
+image:
+  registry: ""
+  tag: ""
+
+# Each component should follow this structure:
+#
+# name:
+#   replicas: 1
+#   resources: {}
+#   ingress: ...
+
+poll:
+  replicas: 1
+
+worker:
+  replicas: 1
+
+result:
+  replicas: 1
+
+redis:
+  replicas: 1
+  # Service name, also the value of REDIS_HOST in poll and worker
+  serviceName: redis
+
+postgres:
+  replicas: 1
+  # Service name, also the value of POSTGRES_HOST in worker and result
+  serviceName: postgres
+  # Secret created by the deploy script, not by the chart
+  auth:
+    secretName: postgres-secret
+    secretKey: POSTGRES_PASSWORD
