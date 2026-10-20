@@ -60,6 +60,6 @@ Resource names
 {{/*
 Resource names
 */}}
-{{- define "poll-app.poll.fullname" -}}
-{{ include "poll-app.fullname" . }}-poll
+{{- define "poll-app.redis.fullname" -}}
+{{- printf "%s-redis" (include "poll-app.fullname" . | trunc 58 | trimSuffix "-") }}
 {{- end }}

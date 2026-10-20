@@ -4,18 +4,15 @@
 # Release and namespace are helm arguments, not values: templates read them
 # with .Release.Name and .Release.Namespace.
 
-image:
-  # The image registry to use
-  registry: ""
+registry:
+  url: ""
+  auth:
+    secretName: ""
 
 secrets:
   # Optional: don't use it if AKS have ACR attached
   registry:
     name: ""
-
-  redis:
-    name: redis-secret
-    passwordKey: REDIS_PASSWORD
 
 poll:
   replicas: 1
@@ -59,8 +56,6 @@ result:
 
 redis:
   replicas: 1 # Should not be an other value than 1
-  # Service name, also the value of REDIS_HOST in poll and worker
-  serviceName: redis
   containerImage: redis:8.10.2-alpine
   port: 6379
   resources:
@@ -70,9 +65,9 @@ redis:
     limits:
       memory: 128Mi
   auth:
-    secretName: redis-secret
-    secretKey: REDIS_PASSWORD
     enabled: false
+    secretName: redis-secret
+    passwordKey: REDIS_PASSWORD
 
 postgres:
   replicas: 1
@@ -81,4 +76,4 @@ postgres:
   # Secret created by the deploy script, not by the chart
   auth:
     secretName: postgres-secret
-    secretKey: POSTGRES_PASSWORD
+    passwordKey: POSTGRES_PASSWORD
