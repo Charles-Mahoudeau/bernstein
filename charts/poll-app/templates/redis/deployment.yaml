@@ -15,8 +15,8 @@ spec:
         app: {{ .Values.redis.serviceName }}
     spec:
       containers:
-      - name: redis
-        image: redis:8.10.2-alpine
+      - name: {{ include "poll-app.poll.fullname" . }}
+        image: {{ .Values.redis.containerImage }}
         ports:
           - containerPort: 6379
         readinessProbe:
