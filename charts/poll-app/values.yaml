@@ -5,18 +5,51 @@
 # with .Release.Name and .Release.Namespace.
 
 image:
+  # The image registry to use
   registry: ""
-  tag: ""
 
-# Each component should follow this structure:
-#
-# name:
-#   replicas: 1
-#   resources: {}
-#   ingress: ...
+secrets:
+  # Optional: don't use it if AKS have ACR attached
+  registry:
+    name: ""
+
+  redis:
+    name: redis-secret
+    passwordKey: REDIS_PASSWORD
 
 poll:
   replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+  image:
+    repository: poll
+    tag: "" # defaults to .Chart.AppVersion
+    pullPolicy: IfNotPresent
+  service:
+    port: 80
+  ingress:
+    enabled: true
+    className: traefik
+    host: "" # Empty = match any host
+  probe:
+    liveness:
+      httpGet:
+        path: /healthz
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      failureThreshold: 3
+    readiness:
+      httpGet:
+        path: /readyz
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      failureThreshold: 3
 
 worker:
   replicas: 1
