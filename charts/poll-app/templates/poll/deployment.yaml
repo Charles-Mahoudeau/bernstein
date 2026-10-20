@@ -39,8 +39,8 @@ spec:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.redis.name }}
-                  key: {{ .Values.secrets.redis.passwordKey }}
+                  name: {{ .Values.redis.auth.secretName }}
+                  key: {{ .Values.redis.auth.passwordKey }}
                   optional: true
           {{- with .Values.poll.probe.liveness }}
           livenessProbe:

@@ -45,10 +45,10 @@ spec:
             valueFrom:
               secretKeyRef:
                 name: {{ .Values.redis.auth.secretName }}
-                key: {{ .Values.redis.auth.secretKey }}
+                key: {{ .Values.redis.auth.passwordKey }}
           - name: REDISCLI_AUTH
             valueFrom:
               secretKeyRef:
                 name: {{ .Values.redis.auth.secretName }}
-                key: {{ .Values.redis.auth.secretKey }}
+                key: {{ .Values.redis.auth.passwordKey }}
         {{- end }}

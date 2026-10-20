@@ -14,10 +14,6 @@ secrets:
   registry:
     name: ""
 
-  redis:
-    name: redis-secret
-    passwordKey: REDIS_PASSWORD
-
 poll:
   replicas: 1
   resources:
@@ -71,9 +67,9 @@ redis:
     limits:
       memory: 128Mi
   auth:
-    secretName: redis-secret
-    secretKey: REDIS_PASSWORD
     enabled: false
+    secretName: redis-secret
+    passwordKey: REDIS_PASSWORD
 
 postgres:
   replicas: 1
@@ -82,4 +78,4 @@ postgres:
   # Secret created by the deploy script, not by the chart
   auth:
     secretName: postgres-secret
-    secretKey: POSTGRES_PASSWORD
+    passwordKey: POSTGRES_PASSWORD
