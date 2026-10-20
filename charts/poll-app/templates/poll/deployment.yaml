@@ -23,7 +23,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ include "poll-app.poll.fullname" . }}
-          image: "{{ with .Values.image.registry | trimSuffix "/" }}{{ . }}/{{ end }}{{ .Values.poll.image.repository }}:{{ .Values.poll.image.tag | default .Chart.AppVersion }}"
+          image: "{{ with .Values.registry.url | trimSuffix "/" }}{{ . }}/{{ end }}{{ .Values.poll.image.repository }}:{{ .Values.poll.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.poll.image.pullPolicy }}
           {{- with .Values.poll.resources }}
           resources:

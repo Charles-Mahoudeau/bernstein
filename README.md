@@ -22,6 +22,6 @@ kubectl -n $NAMESPACE create secret generic postgres-secret --from-literal=POSTG
 kubectl -n $NAMESPACE create secret generic redis-secret --from-literal=REDIS_PASSWORD=$REDIS_PASSWORD
 helm upgrade --install poll-app ./charts/poll-app \
   --namespace $NAMESPACE \
-  --set image.registry="$AZURE_ACR_NAME.azurecr.io" \
+  --set registry.url="$AZURE_ACR_NAME.azurecr.io" \
   --set poll.image.tag="test"
 ```

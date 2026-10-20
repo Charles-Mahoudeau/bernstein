@@ -4,9 +4,10 @@
 # Release and namespace are helm arguments, not values: templates read them
 # with .Release.Name and .Release.Namespace.
 
-image:
-  # The image registry to use
-  registry: ""
+registry:
+  url: ""
+  auth:
+    secretName: ""
 
 secrets:
   # Optional: don't use it if AKS have ACR attached
