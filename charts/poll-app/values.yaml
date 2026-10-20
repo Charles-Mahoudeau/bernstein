@@ -29,7 +29,7 @@ poll:
   service:
     port: 80
   ingress:
-    enabled: true
+    enabled: false
     className: traefik
     host: "" # Empty = match any host
   probe:
