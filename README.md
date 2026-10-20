@@ -1,27 +1,26 @@
 # Bernstein
 
-## Deploy to Azure (WIP)
+## Deploy to Azure
 
-### Install `traefik`
+Everything goes through the `scripts/bernstein` CLI. It needs [uv](https://docs.astral.sh/uv/), `az`, `kubectl`, `helm` and (for local builds) `docker`. Full guide: [docs/scripts.md](docs/scripts.md).
 
-The deployment needs Traefik to be installed in the cluster, use the following commands to install it:
 ```shell
-helm repo add traefik https://traefik.github.io/charts
-helm install traefik traefik/traefik -n traefik --create-namespace
-kubectl get svc -n traefik traefik   # EXTERNAL-IP is the public address
+cp .env.example .env                   # set POSTGRES_PASSWORD at least
+az login
+
+scripts/bernstein preflight            # VM size, vCPU quota, registry name
+scripts/bernstein up                   # registry, cluster, Traefik, images, deploy, vote check
+scripts/bernstein status               # URLs, pods, revision
+
+scripts/bernstein release              # rolling update to the current commit, availability probed
+scripts/bernstein rollback             # back to the previous revision
+scripts/bernstein chaos drain          # drain a node while probing (also: pod, node-kill, bad-release)
+scripts/bernstein demo                 # the whole evaluation scenario, one report
+
+scripts/bernstein cluster stop         # stop paying for the VMs
+scripts/bernstein down --all           # delete the cluster and the registry
 ```
 
-### Deploy
+Every command prints the `az`, `kubectl`, `helm` and `docker` commands it runs, and `--dry-run` prints them without running anything.
 
-Use these commands to deploy the application:
-```shell
-# Don't forget to load your .env file
-# Fish: bass set -a \; source .env \; set +a
-kubectl create namespace $NAMESPACE
-kubectl -n $NAMESPACE create secret generic postgres-secret --from-literal=POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-kubectl -n $NAMESPACE create secret generic redis-secret --from-literal=REDIS_PASSWORD=$REDIS_PASSWORD
-helm upgrade --install poll-app ./charts/poll-app \
-  --namespace $NAMESPACE \
-  --set registry.url="$AZURE_ACR_NAME.azurecr.io" \
-  --set poll.image.tag="test"
-```
+Design notes: [docs/deployment-choices.md](docs/deployment-choices.md).
