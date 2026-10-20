@@ -63,3 +63,10 @@ Resource names
 {{- define "poll-app.redis.fullname" -}}
 {{- printf "%s-redis" (include "poll-app.fullname" . | trunc 58 | trimSuffix "-") }}
 {{- end }}
+
+{{/*
+Resource names
+*/}}
+{{- define "poll-app.result.fullname" -}}
+{{- printf "%s-result" (include "poll-app.fullname" . | trunc 58 | trimSuffix "-") }}
+{{- end }}

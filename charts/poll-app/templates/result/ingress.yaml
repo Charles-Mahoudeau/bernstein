@@ -1,0 +1,24 @@
+{{- if .Values.result.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "poll-app.result.fullname" . }}
+  labels:
+    {{- include "poll-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: result
+spec:
+  ingressClassName: {{ .Values.result.ingress.className }}
+  rules:
+    - {{- with .Values.result.ingress.host }}
+      host: {{ . }}
+      {{- end }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "poll-app.result.fullname" . }}
+                port:
+                  number: {{ .Values.result.service.port }}
+{{- end }}
