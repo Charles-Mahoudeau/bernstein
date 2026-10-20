@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis
+  name: {{ include "poll-app.poll.fullname" . }}
 spec:
   strategy:
     type: Recreate
@@ -37,7 +37,6 @@ spec:
         resources:
           {{- toYaml . | nindent 10 }}
         {{- end }}
-
         {{- if .Values.redis.auth.enabled }}
         args: [ "--requirepass", "$(REDIS_PASSWORD)" ]
         env:

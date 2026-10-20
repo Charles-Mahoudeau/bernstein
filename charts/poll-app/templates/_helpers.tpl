@@ -60,3 +60,10 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Resource names
+*/}}
+{{- define "poll-app.poll.fullname" -}}
+{{ include "poll-app.fullname" . }}-poll
+{{- end }}
