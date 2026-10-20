@@ -21,5 +21,4 @@ spec:
                 name: {{ include "poll-app.poll.fullname" . }}
                 port:
                   number: {{ .Values.poll.service.port }}
-
 {{- end }}

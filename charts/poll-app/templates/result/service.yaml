@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "poll-app.result.fullname" . }}
+  labels:
+    {{- include "poll-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: result
+spec:
+  selector:
+    {{- include "poll-app.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: result
+  ports:
+    - port: {{ .Values.result.service.port }}
+      targetPort: http
+  type: ClusterIP
