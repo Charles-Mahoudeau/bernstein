@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  strategy:
+    type: Recreate
+  replicas: {{ .Values.redis.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.redis.serviceName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.redis.serviceName }}
+    spec:
+      containers:
+      - name: redis
+        image: redis:8.10.2-alpine
+        ports:
+          - containerPort: 6379
+        readinessProbe:
+          exec:
+            command: [ "redis-cli", "-e", "ping" ]
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3
+        livenessProbe:
+          exec:
+            command: [ "redis-cli", "-e", "ping" ]
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 3
+        {{- with .Values.redis.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+
+        {{- if .Values.redis.auth.enabled }}
+        args: [ "--requirepass", "$(REDIS_PASSWORD)" ]
+        env:
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.redis.auth.secretName }}
+                key: {{ .Values.redis.auth.secretKey }}
+          - name: REDISCLI_AUTH
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.redis.auth.secretName }}
+                key: {{ .Values.redis.auth.secretKey }}
+        {{- end }}
