@@ -35,7 +35,7 @@ spec:
               protocol: TCP
           env:
             - name: REDIS_HOST
-              value: {{ .Values.redis.serviceName | quote }}
+              value: {{ include "poll-app.redis.fullname" . | quote }}
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
