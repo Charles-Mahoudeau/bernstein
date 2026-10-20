@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  strategy:
+    type: Recreate
+  replicas: {{ .Values.redis.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.redis.serviceName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.redis.serviceName }}
+    spec:
+      containers:
+      - name: redis
+        image: redis:8.10.2-alpine
+        ports:
+          - containerPort: 6379

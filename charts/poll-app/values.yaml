@@ -25,7 +25,7 @@ result:
   replicas: 1
 
 redis:
-  replicas: 1
+  replicas: 1 # Should not be an other value than 1
   # Service name, also the value of REDIS_HOST in poll and worker
   serviceName: redis
 
