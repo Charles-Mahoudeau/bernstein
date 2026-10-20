@@ -51,33 +51,33 @@ Log in to Azure once with `az login` (or `az login --tenant <tenant>`). In CI, s
 
 Copy `.env.example` to `.env` (git-ignored) and fill it in. Precedence, highest first: command-line flags, environment variables, `.env`, defaults. Empty values count as unset. `--env-file PATH` reads another file.
 
-| Variable                   | Default                     | Purpose                                                                              |
-|----------------------------|-----------------------------|--------------------------------------------------------------------------------------|
-| `AZURE_SUBSCRIPTION_ID`    | `az` current subscription   | Passed as `--subscription` to every `az` command                                      |
-| `AZURE_TENANT_ID`          |                             | Service principal login, `az login` hint                                             |
-| `AZURE_CLIENT_ID`          |                             | Service principal login (CI only)                                                    |
-| `AZURE_CLIENT_SECRET`      |                             | Service principal login (CI only)                                                    |
-| `AZURE_RESOURCE_GROUP`     | `Bernstein`                 | Holds the cluster and registry. Created if missing, **never deleted**                |
-| `AZURE_AKS_CLUSTER_NAME`   | `bernstein-aks`             | Cluster name                                                                         |
-| `AZURE_ACR_NAME`           | generated                   | Registry name. `registry create` generates `bernsteinacr<hex>` and writes it to `.env` |
-| `AZURE_LOCATION`           | `spaincentral`              | Region of new resources                                                              |
-| `AZURE_AKS_NODE_COUNT`     | `2`                         | Nodes of the node pool                                                               |
-| `AZURE_AKS_VM_SIZE`        | `Standard_B2s_v2`           | Node size                                                                            |
-| `AZURE_AKS_OS_DISK_GB`     | `64`                        | Node OS disk                                                                         |
-| `AZURE_AKS_MAX_SURGE`      | `1`                         | Extra nodes during node upgrades (`1`, `33%`, ...)                                   |
-| `AZURE_AKS_NODEPOOL`       | `system`                    | Node pool name                                                                       |
-| `AZURE_AKS_NETWORK_POLICY` | `cilium`                    | `cilium`, `azure`, `calico` or `none`, needed for NetworkPolicies. Creation only     |
-| `AZURE_ACR_SKU`            | `Basic`                     | Registry SKU                                                                         |
-| `NAMESPACE`                | `poll`                      | Namespace of the app                                                                 |
-| `HELM_RELEASE`             | `poll-app`                  | Release name                                                                         |
-| `KUBE_CONTEXT`             | cluster name                | kubectl/helm context. Every command passes it, so another current context is never touched |
-| `TRAEFIK_NAMESPACE`        | `traefik`                   | Namespace of the Traefik release                                                     |
-| `POLL_HOST`, `RESULT_HOST` | `poll.<ip>.nip.io`, `result.<ip>.nip.io` | Ingress hostnames. nip.io resolves `<anything>.<ip>.nip.io` to `<ip>`, no DNS needed |
-| `IMAGE_TAG`                | git short SHA               | Image tag (see [images build](#images))                                              |
-| `PROBE_RATE`               | `5`                         | Requests per second per probed URL                                                   |
-| `PROBE_TIMEOUT`            | `2`                         | Seconds before a probe request counts as failed                                      |
-| `POSTGRES_PASSWORD`        | required for `deploy`       | Written to the Secret `postgres-secret`                                              |
-| `REDIS_PASSWORD`           | none                        | Set: Secret `redis-secret` and `redis.auth.enabled=true`. Empty: Redis without password |
+| Variable                   | Default                                  | Purpose                                                                                    |
+|----------------------------|------------------------------------------|--------------------------------------------------------------------------------------------|
+| `AZURE_SUBSCRIPTION_ID`    | `az` current subscription                | Passed as `--subscription` to every `az` command                                           |
+| `AZURE_TENANT_ID`          |                                          | Service principal login, `az login` hint                                                   |
+| `AZURE_CLIENT_ID`          |                                          | Service principal login (CI only)                                                          |
+| `AZURE_CLIENT_SECRET`      |                                          | Service principal login (CI only)                                                          |
+| `AZURE_RESOURCE_GROUP`     | `Bernstein`                              | Holds the cluster and registry. Created if missing, **never deleted**                      |
+| `AZURE_AKS_CLUSTER_NAME`   | `bernstein-aks`                          | Cluster name                                                                               |
+| `AZURE_ACR_NAME`           | generated                                | Registry name. `registry create` generates `bernsteinacr<hex>` and writes it to `.env`     |
+| `AZURE_LOCATION`           | `spaincentral`                           | Region of new resources                                                                    |
+| `AZURE_AKS_NODE_COUNT`     | `2`                                      | Nodes of the node pool                                                                     |
+| `AZURE_AKS_VM_SIZE`        | `Standard_B2s_v2`                        | Node size                                                                                  |
+| `AZURE_AKS_OS_DISK_GB`     | `64`                                     | Node OS disk                                                                               |
+| `AZURE_AKS_MAX_SURGE`      | `1`                                      | Extra nodes during node upgrades (`1`, `33%`, ...)                                         |
+| `AZURE_AKS_NODEPOOL`       | `system`                                 | Node pool name                                                                             |
+| `AZURE_AKS_NETWORK_POLICY` | `cilium`                                 | `cilium`, `azure`, `calico` or `none`, needed for NetworkPolicies. Creation only           |
+| `AZURE_ACR_SKU`            | `Basic`                                  | Registry SKU                                                                               |
+| `NAMESPACE`                | `poll`                                   | Namespace of the app                                                                       |
+| `HELM_RELEASE`             | `poll-app`                               | Release name                                                                               |
+| `KUBE_CONTEXT`             | cluster name                             | kubectl/helm context. Every command passes it, so another current context is never touched |
+| `TRAEFIK_NAMESPACE`        | `traefik`                                | Namespace of the Traefik release                                                           |
+| `POLL_HOST`, `RESULT_HOST` | `poll.<ip>.nip.io`, `result.<ip>.nip.io` | Ingress hostnames. nip.io resolves `<anything>.<ip>.nip.io` to `<ip>`, no DNS needed       |
+| `IMAGE_TAG`                | git short SHA                            | Image tag (see [images build](#images))                                                    |
+| `PROBE_RATE`               | `5`                                      | Requests per second per probed URL                                                         |
+| `PROBE_TIMEOUT`            | `2`                                      | Seconds before a probe request counts as failed                                            |
+| `POSTGRES_PASSWORD`        | required for `deploy`                    | Written to the Secret `postgres-secret`                                                    |
+| `REDIS_PASSWORD`           | none                                     | Set: Secret `redis-secret` and `redis.auth.enabled=true`. Empty: Redis without password    |
 
 The defaults come from the setup that works on the "Azure for Students" subscription (France Central has no usable small VM size, Spain Central has `Standard_B2s_v2` with enough quota).
 
@@ -94,27 +94,27 @@ $ az aks create -g Bernstein -n bernstein-aks -l spaincentral --node-count 2 ...
 OK  cluster bernstein-aks is ready
 ```
 
-| Marker          | Meaning                                                                 |
-|-----------------|-------------------------------------------------------------------------|
-| `==>`           | A stage of the command                                                  |
-| `$`             | A command (dimmed = read-only query, highlighted = action)              |
-| `│`             | Output of the command above                                             |
-| `[12:03:04 +5.0s]` | Progress of a wait loop or of the monitor, printed when the state changes |
-| `OK`, `WARN`, `FAIL`, `ERROR` | Result lines; errors go to stderr                        |
-| `??`            | A confirmation prompt                                                   |
+| Marker                        | Meaning                                                                   |
+|-------------------------------|---------------------------------------------------------------------------|
+| `==>`                         | A stage of the command                                                    |
+| `$`                           | A command (dimmed = read-only query, highlighted = action)                |
+| `│`                           | Output of the command above                                               |
+| `[12:03:04 +5.0s]`            | Progress of a wait loop or of the monitor, printed when the state changes |
+| `OK`, `WARN`, `FAIL`, `ERROR` | Result lines; errors go to stderr                                         |
+| `??`                          | A confirmation prompt                                                     |
 
 Secrets (`POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `AZURE_CLIENT_SECRET`) never appear: Secrets are sent to `kubectl apply -f -` on stdin, and any secret value in a command or its output is replaced by `***`. The vote check is not a subprocess; it is echoed as the equivalent `curl` command.
 
 Global options go before the command (`scripts/bernstein -n -q deploy`):
 
-| Option                       | Effect                                                                                     |
-|------------------------------|--------------------------------------------------------------------------------------------|
-| `--dry-run`, `-n`            | Print the actions without running them. Queries still run, so the plan matches the real state |
-| `--quiet`, `-q`              | Hide queries and details                                                                   |
-| `--verbose`, `-v`            | Also print the output of queries                                                           |
+| Option                        | Effect                                                                                                               |
+|-------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| `--dry-run`, `-n`             | Print the actions without running them. Queries still run, so the plan matches the real state                        |
+| `--quiet`, `-q`               | Hide queries and details                                                                                             |
+| `--verbose`, `-v`             | Also print the output of queries                                                                                     |
 | `--color auto\|always\|never` | `auto` colors only a terminal and honours `NO_COLOR` and `FORCE_COLOR`. Without colors, the markers keep the meaning |
-| `--yes`, `-y`                | Answer yes to confirmations. Without a terminal and without `--yes`, a confirmation refuses |
-| `--env-file PATH`            | Settings file (default `.env` at the repo root)                                            |
+| `--yes`, `-y`                 | Answer yes to confirmations. Without a terminal and without `--yes`, a confirmation refuses                          |
+| `--env-file PATH`             | Settings file (default `.env` at the repo root)                                                                      |
 
 Deletions (`cluster delete`, `registry delete`, `uninstall --delete-namespace`) ask you to type the resource name.
 
@@ -151,47 +151,47 @@ Each team member can use their own `NAMESPACE` on the shared cluster.
 
 ### Azure
 
-| Command                    | What it does                                                                                       |
-|----------------------------|----------------------------------------------------------------------------------------------------|
-| `preflight`                | Tools and versions, Azure login, VM size restrictions in the region, vCPU quota for nodes + surge (total and VM family), registry name availability. Suggests fallback sizes and regions on failure |
-| `registry create`          | Registers `Microsoft.ContainerRegistry` if needed, creates the resource group if missing, generates `AZURE_ACR_NAME` into `.env` if empty, creates the ACR. Idempotent |
-| `registry show`            | Login server, SKU, repositories and their latest tags                                              |
-| `registry login`           | `az acr login` (Docker credentials for pushes)                                                     |
-| `registry delete`          | Deletes the registry and every image (type the name to confirm)                                    |
+| Command                    | What it does                                                                                                                                                                                                                                                                          |
+|----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `preflight`                | Tools and versions, Azure login, VM size restrictions in the region, vCPU quota for nodes + surge (total and VM family), registry name availability. Suggests fallback sizes and regions on failure                                                                                   |
+| `registry create`          | Registers `Microsoft.ContainerRegistry` if needed, creates the resource group if missing, generates `AZURE_ACR_NAME` into `.env` if empty, creates the ACR. Idempotent                                                                                                                |
+| `registry show`            | Login server, SKU, repositories and their latest tags                                                                                                                                                                                                                                 |
+| `registry login`           | `az acr login` (Docker credentials for pushes)                                                                                                                                                                                                                                        |
+| `registry delete`          | Deletes the registry and every image (type the name to confirm)                                                                                                                                                                                                                       |
 | `cluster create`           | Creates the cluster (`--attach-acr`, Azure CNI Overlay, network policy, free tier), then sets the node pool max surge, fetches credentials and waits for the nodes. On an existing cluster it attaches the ACR if the kubelet lacks `AcrPull`, sets max surge and fetches credentials |
-| `cluster start` / `stop`   | Starts or stops (pauses) the cluster; `start` waits for the nodes                                   |
-| `cluster status`           | Power state, node pools, nodes, and the billed public IPs and disks of the node resource group     |
-| `cluster scale N`          | Changes the number of nodes                                                                         |
-| `cluster credentials`      | `az aks get-credentials` into `~/.kube/config` (context named after the cluster)                   |
-| `cluster grant EMAIL`      | Gives a teammate "Azure Kubernetes Service Cluster User Role" on the cluster and `AcrPush` on the registry |
-| `cluster delete`           | Deletes the cluster; the registry is kept (type the name to confirm)                               |
-| `traefik install`          | Installs or upgrades Traefik from its official chart (`charts/traefik-values.yaml` if it exists) and waits for its public IP |
-| `traefik ip` / `uninstall` | Prints the public IP / removes Traefik                                                             |
-| `up`                       | `preflight` → `registry create` → `cluster create` → `traefik install` → `images build` → `deploy` → `vote-check` |
-| `down [--all]`             | `cluster delete`, and with `--all` `registry delete`. The resource group is kept                   |
+| `cluster start` / `stop`   | Starts or stops (pauses) the cluster; `start` waits for the nodes                                                                                                                                                                                                                     |
+| `cluster status`           | Power state, node pools, nodes, and the billed public IPs and disks of the node resource group                                                                                                                                                                                        |
+| `cluster scale N`          | Changes the number of nodes                                                                                                                                                                                                                                                           |
+| `cluster credentials`      | `az aks get-credentials` into `~/.kube/config` (context named after the cluster)                                                                                                                                                                                                      |
+| `cluster grant EMAIL`      | Gives a teammate "Azure Kubernetes Service Cluster User Role" on the cluster and `AcrPush` on the registry                                                                                                                                                                            |
+| `cluster delete`           | Deletes the cluster; the registry is kept (type the name to confirm)                                                                                                                                                                                                                  |
+| `traefik install`          | Installs or upgrades Traefik from its official chart (`charts/traefik-values.yaml` if it exists) and waits for its public IP                                                                                                                                                          |
+| `traefik ip` / `uninstall` | Prints the public IP / removes Traefik                                                                                                                                                                                                                                                |
+| `up`                       | `preflight` → `registry create` → `cluster create` → `traefik install` → `images build` → `deploy` → `vote-check`                                                                                                                                                                     |
+| `down [--all]`             | `cluster delete`, and with `--all` `registry delete`. The resource group is kept                                                                                                                                                                                                      |
 
 ### Images
 
-| Command                         | What it does                                                                                 |
-|---------------------------------|----------------------------------------------------------------------------------------------|
-| `images list`                   | Components: every `poll-application/<name>/Dockerfile` (`poll`, `result`, `worker`)          |
-| `images build`                  | `docker buildx build --platform linux/amd64 --push` for each component, after `az acr login` |
-| `images build --remote`         | `az acr build` instead: built in Azure, no local Docker                                      |
-| `images build -c poll --no-push`| Only `poll`, loaded into the local Docker                                                    |
+| Command                          | What it does                                                                                 |
+|----------------------------------|----------------------------------------------------------------------------------------------|
+| `images list`                    | Components: every `poll-application/<name>/Dockerfile` (`poll`, `result`, `worker`)          |
+| `images build`                   | `docker buildx build --platform linux/amd64 --push` for each component, after `az acr login` |
+| `images build --remote`          | `az acr build` instead: built in Azure, no local Docker                                      |
+| `images build -c poll --no-push` | Only `poll`, loaded into the local Docker                                                    |
 
 The tag is `--tag`, else `IMAGE_TAG`, else the short commit SHA. Uncommitted changes under `poll-application/` add `-dirty-<timestamp>`, so a different build never reuses a tag. A tag already in the registry is skipped (`--force` rebuilds). Images are never tagged `latest`: each Helm revision points to exact images, so a rollback restores exact images.
 
 ### Release
 
-| Command                       | What it does                                                                                                         |
-|-------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| `deploy [--tag T] [--set k=v]`| Creates the namespace, applies the Secrets, installs Traefik if absent, then `helm upgrade --install` with the registry, the image tags, the ingress hosts and `--rollback-on-failure --wait=watcher --timeout 3m` (Helm 3: `--atomic --wait`). Prints the URLs |
-| `release`                     | `images build`, then `deploy` under the [availability monitor](#the-availability-monitor), then `vote-check`         |
-| `release --same-images`       | Copies the deployed images to a new tag inside the registry (`az acr import`, no rebuild) and rolls it out: a real rolling update of every Deployment with the same code |
-| `rollback [REVISION]`         | `helm rollback` to the previous (or given) revision under the monitor                                                |
-| `history`                     | Revisions of the release                                                                                             |
-| `status`                      | Revision, workloads (ready/desired, image), pods (node, ready, restarts), URLs                                        |
-| `uninstall [--delete-namespace]` | `helm uninstall`; optionally the namespace, its Secrets and volumes                                               |
+| Command                          | What it does                                                                                                                                                                                                                                                    |
+|----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `deploy [--tag T] [--set k=v]`   | Creates the namespace, applies the Secrets, installs Traefik if absent, then `helm upgrade --install` with the registry, the image tags, the ingress hosts and `--rollback-on-failure --wait=watcher --timeout 3m` (Helm 3: `--atomic --wait`). Prints the URLs |
+| `release`                        | `images build`, then `deploy` under the [availability monitor](#the-availability-monitor), then `vote-check`                                                                                                                                                    |
+| `release --same-images`          | Copies the deployed images to a new tag inside the registry (`az acr import`, no rebuild) and rolls it out: a real rolling update of every Deployment with the same code                                                                                        |
+| `rollback [REVISION]`            | `helm rollback` to the previous (or given) revision under the monitor                                                                                                                                                                                           |
+| `history`                        | Revisions of the release                                                                                                                                                                                                                                        |
+| `status`                         | Revision, workloads (ready/desired, image), pods (node, ready, restarts), URLs                                                                                                                                                                                  |
+| `uninstall [--delete-namespace]` | `helm uninstall`; optionally the namespace, its Secrets and volumes                                                                                                                                                                                             |
 
 `--set` values are passed last, so they override the CLI's own (`--set poll.replicas=3`).
 
@@ -199,9 +199,9 @@ What happens when a release is bad: the new pods never become ready, the old pod
 
 ### Checks
 
-| Command        | What it does                                                                                       |
-|----------------|----------------------------------------------------------------------------------------------------|
-| `probe [-d S]` | Runs the monitor alone for `S` seconds or until Ctrl-C, e.g. in a second terminal during a manual operation |
+| Command        | What it does                                                                                                                                                                                    |
+|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `probe [-d S]` | Runs the monitor alone for `S` seconds or until Ctrl-C, e.g. in a second terminal during a manual operation                                                                                     |
 | `vote-check`   | Connects to Result over Socket.IO, reads the tally, casts a vote on Poll with a fresh `voter_id` and waits until the tally includes it. This covers poll → Redis → worker → PostgreSQL → result |
 
 ## The availability monitor
@@ -234,15 +234,15 @@ Reports are written to `reports/` (git-ignored):
 
 All of them run under the monitor and restore the cluster in a `finally` block: an error or Ctrl-C still uncordons the node or starts the VM again.
 
-| Command                                   | Failure simulated                         | What happens                                                                                       |
-|-------------------------------------------|-------------------------------------------|----------------------------------------------------------------------------------------------------|
-| `chaos pod`                               | A pod crashes                             | Deletes one random pod of the release, waits until every workload is ready again                   |
-| `chaos pod -c poll --count 5 --interval 10` | Repeated crashes of one component       | 5 rounds, 10 s apart                                                                               |
-| `chaos pod -c poll --all`                 | Every replica of a component dies at once | Expected to fail: the one case spare replicas cannot cover                                         |
-| `chaos drain [--node N]`                  | Node maintenance (graceful)               | `kubectl drain` (respects PodDisruptionBudgets) the node with the most app pods, waits for the app, `kubectl uncordon` |
-| `chaos node-kill [--node N] [--down-time 120]` | Node crash (hard)                    | Finds the node's VMSS instance from its `providerID`, `az vmss deallocate` (sudden power-off), waits for `NotReady`, keeps it down, `az vmss start`, waits for the node and the app |
-| `chaos bad-release [--mode probe\|image] [-c poll]` | A broken version is deployed    | `helm upgrade --reuse-values` with one broken value: `probe` points the readiness probe to a 404 path, `image` uses a tag that does not exist. Expects Helm to fail and roll back, checks the release is back on the previous tag |
-| `demo [--with-node-kill]`                 | All of the above                          | vote check → `release --same-images` → `rollback` → `bad-release` → `chaos pod --count 3` → `chaos drain` → (`node-kill`) → vote check. Asks once, continues after a failed step, prints one summary and writes `reports/<date>-demo.json` |
+| Command                                             | Failure simulated                         | What happens                                                                                                                                                                                                                               |
+|-----------------------------------------------------|-------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `chaos pod`                                         | A pod crashes                             | Deletes one random pod of the release, waits until every workload is ready again                                                                                                                                                           |
+| `chaos pod -c poll --count 5 --interval 10`         | Repeated crashes of one component         | 5 rounds, 10 s apart                                                                                                                                                                                                                       |
+| `chaos pod -c poll --all`                           | Every replica of a component dies at once | Expected to fail: the one case spare replicas cannot cover                                                                                                                                                                                 |
+| `chaos drain [--node N]`                            | Node maintenance (graceful)               | `kubectl drain` (respects PodDisruptionBudgets) the node with the most app pods, waits for the app, `kubectl uncordon`                                                                                                                     |
+| `chaos node-kill [--node N] [--down-time 120]`      | Node crash (hard)                         | Finds the node's VMSS instance from its `providerID`, `az vmss deallocate` (sudden power-off), waits for `NotReady`, keeps it down, `az vmss start`, waits for the node and the app                                                        |
+| `chaos bad-release [--mode probe\|image] [-c poll]` | A broken version is deployed              | `helm upgrade --reuse-values` with one broken value: `probe` points the readiness probe to a 404 path, `image` uses a tag that does not exist. Expects Helm to fail and roll back, checks the release is back on the previous tag          |
+| `demo [--with-node-kill]`                           | All of the above                          | vote check → `release --same-images` → `rollback` → `bad-release` → `chaos pod --count 3` → `chaos drain` → (`node-kill`) → vote check. Asks once, continues after a failed step, prints one summary and writes `reports/<date>-demo.json` |
 
 Notes:
 
@@ -276,19 +276,19 @@ About EUR 60-70 per month while running, almost all of it the nodes.
 
 ## Troubleshooting
 
-| Problem                                             | Fix                                                                                              |
-|-----------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| `preflight`: size restricted in the region          | Set `AZURE_AKS_VM_SIZE` to `Standard_B2as_v2` or `Standard_B2ls_v2`, or `AZURE_LOCATION` to `denmarkeast` / `austriaeast` |
-| `preflight`: not enough vCPU quota                  | Lower `AZURE_AKS_NODE_COUNT` or `AZURE_AKS_MAX_SURGE`, or request more quota in the portal       |
-| `the Azure CLI is not logged in`                    | `az login --tenant <tenant>`                                                                     |
-| Pods in `ImagePullBackOff`                          | `cluster create` again: it re-attaches the registry if the kubelet lacks `AcrPull`. Check the tag with `registry show` |
-| `the cluster is stopped`                            | `cluster start`                                                                                  |
-| `context "bernstein-aks" does not exist`            | `cluster credentials`, or set `KUBE_CONTEXT`                                                     |
-| `deploy` times out and rolls back                   | `status` and `kubectl -n <ns> describe pod ...`; the previous revision is serving                |
+| Problem                                             | Fix                                                                                                                                              |
+|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| `preflight`: size restricted in the region          | Set `AZURE_AKS_VM_SIZE` to `Standard_B2as_v2` or `Standard_B2ls_v2`, or `AZURE_LOCATION` to `denmarkeast` / `austriaeast`                        |
+| `preflight`: not enough vCPU quota                  | Lower `AZURE_AKS_NODE_COUNT` or `AZURE_AKS_MAX_SURGE`, or request more quota in the portal                                                       |
+| `the Azure CLI is not logged in`                    | `az login --tenant <tenant>`                                                                                                                     |
+| Pods in `ImagePullBackOff`                          | `cluster create` again: it re-attaches the registry if the kubelet lacks `AcrPull`. Check the tag with `registry show`                           |
+| `the cluster is stopped`                            | `cluster start`                                                                                                                                  |
+| `context "bernstein-aks" does not exist`            | `cluster credentials`, or set `KUBE_CONTEXT`                                                                                                     |
+| `deploy` times out and rolls back                   | `status` and `kubectl -n <ns> describe pod ...`; the previous revision is serving                                                                |
 | Drain hangs                                         | A PodDisruptionBudget that can never be satisfied (e.g. `minAvailable: 1` with 1 replica); it stops after `--timeout` and the node is uncordoned |
-| Probe fails before the operation starts             | The app is already broken: `status`, `vote-check`                                                |
-| Node pool count differs from `AZURE_AKS_NODE_COUNT` | `cluster scale <n>`                                                                              |
-| Network policy on an existing cluster               | `AZURE_AKS_NETWORK_POLICY` only applies at creation; see `az aks update --network-policy`        |
+| Probe fails before the operation starts             | The app is already broken: `status`, `vote-check`                                                                                                |
+| Node pool count differs from `AZURE_AKS_NODE_COUNT` | `cluster scale <n>`                                                                                                                              |
+| Network policy on an existing cluster               | `AZURE_AKS_NETWORK_POLICY` only applies at creation; see `az aks update --network-policy`                                                        |
 
 ## Development
 
