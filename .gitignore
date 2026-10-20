@@ -28,3 +28,6 @@ target/
 .vscode/
 *.swp
 .DS_Store
+
+# Subject
+bernstein-project.pdf

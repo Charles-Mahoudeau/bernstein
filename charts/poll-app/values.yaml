@@ -25,9 +25,21 @@ result:
   replicas: 1
 
 redis:
-  replicas: 1
+  replicas: 1 # Should not be an other value than 1
   # Service name, also the value of REDIS_HOST in poll and worker
   serviceName: redis
+  containerImage: redis:8.10.2-alpine
+  port: 6379
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+  auth:
+    secretName: redis-secret
+    secretKey: REDIS_PASSWORD
+    enabled: false
 
 postgres:
   replicas: 1
