@@ -16,10 +16,10 @@ Three ways to deploy the manifests were considered.
 | Automatic rollback on failed deploy | Must be scripted | Must be scripted | `helm upgrade --atomic` |
 | Clean removal of everything | Delete files one by one | `kubectl delete -k` | `helm uninstall` |
 | Hooks and tests | No | No | Yes (`helm test`, hooks) |
-| Installing third-party software (ingress-nginx) | Apply someone else's YAML | Same | One chart install |
+| Installing third-party software (Traefik) | Apply someone else's YAML | Same | One chart install |
 | Readability | Plain YAML | Plain YAML plus patches | Go templates |
 
-Plain `kubectl` and Kustomize cover the basic deployment, but both leave release tracking and failed-deploy rollback to custom scripts. The project grades zero-downtime updates and operability, and Helm provides them directly: `helm upgrade --atomic` rolls back by itself when the new pods never become ready. Helm is also needed anyway to install ingress-nginx, so using it for the app keeps a single tool.
+Plain `kubectl` and Kustomize cover the basic deployment, but both leave release tracking and failed-deploy rollback to custom scripts. The project grades zero-downtime updates and operability, and Helm provides them directly: `helm upgrade --atomic` rolls back by itself when the new pods never become ready. Helm is also needed anyway to install the ingress controller, so using it for the app keeps a single tool.
 
 The cost is templating that is harder to read and release state stored in the cluster. For five components this is manageable.
 
@@ -55,7 +55,7 @@ helm rollback poll-app
 helm uninstall poll-app
 ```
 
-ingress-nginx is a second chart, installed from its official repository.
+Traefik is a second chart, installed from its official repository. ingress-nginx was not used because it was retired in March 2026 (no more security fixes); Gateway API was considered but adds new resource types for little gain here.
 
 ## Zero-downtime updates and rollback
 
