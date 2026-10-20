@@ -31,3 +31,7 @@ target/
 
 # Subject
 bernstein-project.pdf
+# Bernstein CLI
+reports/
+.mypy_cache/
+.ruff_cache/

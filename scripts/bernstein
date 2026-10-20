@@ -1,0 +1,4 @@
+#!/bin/sh
+# Run the bernstein CLI from anywhere: scripts/bernstein <command> [options]
+here=$(dirname "$(realpath "$0")")
+exec uv run --quiet --project "$here" bernstein "$@"
