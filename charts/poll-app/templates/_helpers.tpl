@@ -63,6 +63,7 @@ Resource names
 
 {{- define "poll-app.postgres.fullname" -}}
 {{- printf "%s-postgres" (include "poll-app.fullname" . | trunc 58 | trimSuffix "-") }}
+{{- end }}
 
 {{- define "poll-app.result.fullname" -}}
 {{- printf "%s-result" (include "poll-app.fullname" . | trunc 58 | trimSuffix "-") }}
