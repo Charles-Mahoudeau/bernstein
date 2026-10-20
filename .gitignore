@@ -1,0 +1,30 @@
+# Secrets and local config
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+kubeconfig*
+
+# Helm
+charts/*/charts/
+charts/*/*.tgz
+*.tgz
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# Java / Maven
+target/
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
