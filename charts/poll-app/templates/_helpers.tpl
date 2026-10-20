@@ -51,12 +51,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Create the name of the service account to use
+Resource names
 */}}
-{{- define "poll-app.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "poll-app.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end }}
+{{- define "poll-app.poll.fullname" -}}
+{{- printf "%s-poll" (include "poll-app.fullname" . | trunc 58 | trimSuffix "-") }}
 {{- end }}
