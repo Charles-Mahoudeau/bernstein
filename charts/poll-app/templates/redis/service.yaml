@@ -6,6 +6,6 @@ spec:
   selector:
     app: {{ .Values.redis.serviceName }}
   ports:
-    - port: 6379
-      targetPort: 6379
+    - port: {{ .Values.redis.port }}
+      targetPort: redis_host
   type: ClusterIP

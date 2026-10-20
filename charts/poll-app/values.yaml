@@ -29,6 +29,7 @@ redis:
   # Service name, also the value of REDIS_HOST in poll and worker
   serviceName: redis
   containerImage: redis:8.10.2-alpine
+  port: 6379
   resources:
     requests:
       cpu: 50m

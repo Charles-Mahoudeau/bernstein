@@ -18,7 +18,8 @@ spec:
       - name: {{ include "poll-app.poll.fullname" . }}
         image: {{ .Values.redis.containerImage }}
         ports:
-          - containerPort: 6379
+          - name: redis_host
+            containerPort: 6379
         readinessProbe:
           exec:
             command: [ "redis-cli", "-e", "ping" ]
