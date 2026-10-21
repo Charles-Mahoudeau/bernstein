@@ -1,47 +1,26 @@
 # Bernstein
 
-## Build Azure Container Registry (ACR)
+## Deploy to Azure
+
+Everything goes through the `scripts/bernstein` CLI. It needs [uv](https://docs.astral.sh/uv/), `az`, `kubectl`, `helm` and (for local builds) `docker`. Full guide: [docs/scripts.md](docs/scripts.md).
 
 ```shell
-# Login
-az acr login --name $AZURE_ACR_NAME
+cp .env.example .env                   # set POSTGRES_PASSWORD, POSTGRES_USER and POSTGRES_DB
+az login
 
-# Build images
-docker build -t "$AZURE_ACR_NAME.azurecr.io/poll:$IMAGE_TAG" ./poll-application/poll
-docker build -t "$AZURE_ACR_NAME.azurecr.io/result:$IMAGE_TAG" ./poll-application/result
-docker build -t "$AZURE_ACR_NAME.azurecr.io/worker:$IMAGE_TAG" ./poll-application/worker
+scripts/bernstein preflight            # VM size, vCPU quota, registry name
+scripts/bernstein up                   # registry, cluster, Traefik, images, deploy, vote check
+scripts/bernstein status               # URLs, pods, revision
 
-# Push images
-docker push "$AZURE_ACR_NAME.azurecr.io/poll:$IMAGE_TAG" 
-docker push "$AZURE_ACR_NAME.azurecr.io/result:$IMAGE_TAG" 
-docker push "$AZURE_ACR_NAME.azurecr.io/worker:$IMAGE_TAG"
+scripts/bernstein release              # rolling update to the current commit, availability probed
+scripts/bernstein rollback             # back to the previous revision
+scripts/bernstein chaos drain          # drain a node while probing (also: pod, node-kill, bad-release)
+scripts/bernstein demo                 # the whole evaluation scenario, one report
+
+scripts/bernstein cluster stop         # stop paying for the VMs
+scripts/bernstein down --all           # delete the cluster and the registry
 ```
 
-## Deploy to Azure (WIP)
+Every command prints the `az`, `kubectl`, `helm` and `docker` commands it runs, and `--dry-run` prints them without running anything.
 
-### Install `traefik`
-
-The deployment needs Traefik to be installed in the cluster, use the following commands to install it:
-```shell
-helm repo add traefik https://traefik.github.io/charts
-helm install traefik traefik/traefik -n traefik --create-namespace
-kubectl get svc -n traefik traefik   # EXTERNAL-IP is the public address
-```
-
-### Deploy
-
-Use these commands to deploy the application:
-```shell
-# Don't forget to load your .env file
-# Fish: bass set -a \; source .env \; set +a
-kubectl create namespace "$NAMESPACE"
-kubectl -n "$NAMESPACE" create secret generic postgres-secret --from-literal="POSTGRES_PASSWORD=$POSTGRES_PASSWORD"
-kubectl -n "$NAMESPACE" create secret generic redis-secret --from-literal="REDIS_PASSWORD=$REDIS_PASSWORD"
-helm upgrade --install poll-app ./charts/poll-app \
-  --namespace "$NAMESPACE" \
-  --set registry.url="$AZURE_ACR_NAME.azurecr.io" \
-  --set poll.image.tag="$IMAGE_TAG" \
-  --set poll.image.pullPolicy="Always" \
-  --set result.image.tag="$IMAGE_TAG" \
-  --set result.image.pullPolicy="Always"
-```
+Design notes: [docs/deployment-choices.md](docs/deployment-choices.md).
