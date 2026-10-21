@@ -77,6 +77,8 @@ Copy `.env.example` to `.env` (git-ignored) and fill it in. Precedence, highest 
 | `PROBE_RATE`               | `5`                                      | Requests per second per probed URL                                                         |
 | `PROBE_TIMEOUT`            | `2`                                      | Seconds before a probe request counts as failed                                            |
 | `POSTGRES_PASSWORD`        | required for `deploy`                    | Written to the Secret `postgres-secret`                                                    |
+| `POSTGRES_USER`            | required for `deploy`                    | PostgreSQL user, written to `postgres-secret` (not masked in the output)                   |
+| `POSTGRES_DB`              | required for `deploy`                    | PostgreSQL database, written to `postgres-secret` (not masked in the output)               |
 | `REDIS_PASSWORD`           | none                                     | Set: Secret `redis-secret` and `redis.auth.enabled=true`. Empty: Redis without password    |
 
 The defaults come from the setup that works on the "Azure for Students" subscription (France Central has no usable small VM size, Spain Central has `Standard_B2s_v2` with enough quota).
@@ -127,7 +129,7 @@ Exit codes: `0` success, `1` error (a failed command is shown with the end of it
 ### Fresh subscription (or the evaluator's own)
 
 ```sh
-cp .env.example .env            # set POSTGRES_PASSWORD at least
+cp .env.example .env            # set POSTGRES_PASSWORD, POSTGRES_USER and POSTGRES_DB at least
 az login
 scripts/bernstein preflight     # VM size restrictions, vCPU quota, registry name
 scripts/bernstein up            # 15-20 min: registry, cluster, Traefik, images, deploy, vote check

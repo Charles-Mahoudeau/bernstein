@@ -54,6 +54,8 @@ class Settings:
     probe_rate: float = 5.0
     probe_timeout: float = 2.0
     postgres_password: str = ""
+    postgres_user: str = ""
+    postgres_db: str = ""
     redis_password: str = ""
 
     @classmethod

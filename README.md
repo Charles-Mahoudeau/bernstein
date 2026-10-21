@@ -5,7 +5,7 @@
 Everything goes through the `scripts/bernstein` CLI. It needs [uv](https://docs.astral.sh/uv/), `az`, `kubectl`, `helm` and (for local builds) `docker`. Full guide: [docs/scripts.md](docs/scripts.md).
 
 ```shell
-cp .env.example .env                   # set POSTGRES_PASSWORD at least
+cp .env.example .env                   # set POSTGRES_PASSWORD, POSTGRES_USER and POSTGRES_DB
 az login
 
 scripts/bernstein preflight            # VM size, vCPU quota, registry name

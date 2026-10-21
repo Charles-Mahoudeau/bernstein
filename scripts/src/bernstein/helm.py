@@ -141,8 +141,14 @@ def ensure_namespace(settings: Settings) -> None:
     run(kube.kubectl(settings, "create", "namespace", settings.namespace, namespaced=False))
 
 
-def apply_secret(settings: Settings, name: str, key: str, value: str) -> None:
-    """Create or update a Secret; the value goes through stdin, never on the command line."""
+def apply_secret(
+    settings: Settings, name: str, data: dict[str, str], *, masked: Sequence[str]
+) -> None:
+    """Create or update a Secret; the values go through stdin, never on the command line.
+
+    Only ``masked`` values are hidden in the output: masking a user or database name
+    like ``poll`` would hide every occurrence of that word.
+    """
     manifest = {
         "apiVersion": "v1",
         "kind": "Secret",
@@ -152,21 +158,36 @@ def apply_secret(settings: Settings, name: str, key: str, value: str) -> None:
             "labels": {"app.kubernetes.io/managed-by": "bernstein"},
         },
         "type": "Opaque",
-        "stringData": {key: value},
+        "stringData": data,
     }
-    console.detail(f"Secret {name} with key {key} (from {key} in .env), sent on stdin:")
+    keys = ", ".join(data)
+    console.detail(f"Secret {name} with keys {keys} (from .env), sent on stdin:")
     run(
         kube.kubectl(settings, "apply", "-f", "-"),
         stdin=json.dumps(manifest),
-        secrets=[value],
+        secrets=masked,
     )
 
 
 def apply_secrets(settings: Settings) -> None:
-    settings.require("postgres_password")
-    apply_secret(settings, "postgres-secret", "POSTGRES_PASSWORD", settings.postgres_password)
+    settings.require("postgres_password", "postgres_user", "postgres_db")
+    apply_secret(
+        settings,
+        "postgres-secret",
+        {
+            "POSTGRES_PASSWORD": settings.postgres_password,
+            "POSTGRES_USER": settings.postgres_user,
+            "POSTGRES_DB": settings.postgres_db,
+        },
+        masked=[settings.postgres_password],
+    )
     if settings.redis_password:
-        apply_secret(settings, "redis-secret", "REDIS_PASSWORD", settings.redis_password)
+        apply_secret(
+            settings,
+            "redis-secret",
+            {"REDIS_PASSWORD": settings.redis_password},
+            masked=[settings.redis_password],
+        )
     else:
         # Poll reads this Secret as optional: a stale one would make it send a password
         # to a Redis that has none, which Redis rejects.
