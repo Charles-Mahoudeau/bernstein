@@ -36,12 +36,14 @@ spec:
           env:
             - name: REDIS_HOST
               value: {{ include "poll-app.redis.fullname" . | quote }}
+          {{- if .Values.redis.auth.enabled }}
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.redis.auth.secretName }}
                   key: {{ .Values.redis.auth.passwordKey }}
                   optional: true
+          {{- end }}
           {{- with .Values.poll.probe.liveness }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}

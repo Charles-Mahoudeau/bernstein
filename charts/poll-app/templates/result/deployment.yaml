@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "poll-app.result.fullname" . }}
+  labels:
+    {{- include "poll-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: result
+spec:
+  replicas: {{ .Values.result.replicas }}
+  selector:
+    matchLabels:
+      {{- include "poll-app.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: result
+  template:
+    metadata:
+      labels:
+        {{- include "poll-app.labels" . | nindent 8 }}
+        app.kubernetes.io/component: result
+    spec:
+      {{- with .Values.secrets.registry.name }}
+      imagePullSecrets:
+        - name: {{ . }}
+      {{- end }}
+      containers:
+        - name: {{ include "poll-app.result.fullname" . }}
+          image: "{{ with .Values.registry.url | trimSuffix "/" }}{{ . }}/{{ end }}{{ .Values.result.image.repository }}:{{ .Values.result.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.result.image.pullPolicy }}
+          {{- with .Values.result.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          env:
+            - name: REDIS_HOST
+              value: {{ include "poll-app.redis.fullname" . | quote }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.redis.auth.secretName }}
+                  key: {{ .Values.redis.auth.passwordKey }}
+                  optional: true
+          {{- with .Values.result.probe.liveness }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.result.probe.readiness }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      restartPolicy: Always

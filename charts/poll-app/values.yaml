@@ -29,7 +29,7 @@ poll:
   service:
     port: 80
   ingress:
-    enabled: true
+    enabled: false
     className: traefik
     host: "" # Empty = match any host
   probe:
@@ -53,6 +53,37 @@ worker:
 
 result:
   replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+  image:
+    repository: result
+    tag: "" # defaults to .Chart.AppVersion
+    pullPolicy: IfNotPresent
+  service:
+    port: 80
+  ingress:
+    enabled: true
+    className: traefik
+    host: "" # Empty = match any host
+  probe:
+    liveness:
+      httpGet:
+        path: /healthz
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      failureThreshold: 3
+    readiness:
+      httpGet:
+        path: /readyz
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      failureThreshold: 3
 
 redis:
   replicas: 1 # Should not be an other value than 1
@@ -70,10 +101,20 @@ redis:
     passwordKey: REDIS_PASSWORD
 
 postgres:
-  replicas: 1
-  # Service name, also the value of POSTGRES_HOST in worker and result
-  serviceName: postgres
+  replicas: 1 # Single instance: each replica would have its own data
+  image: postgres:18.6-alpine
+  port: 5432
+  storage:
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
   # Secret created by the deploy script, not by the chart
   auth:
     secretName: postgres-secret
     passwordKey: POSTGRES_PASSWORD
+    userKey: POSTGRES_USER
+    dbKey: POSTGRES_DB
