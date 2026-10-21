@@ -50,7 +50,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.postgres.auth.secretName }}
-                  key: {{ .Values.postgres.auth.passwordKey }}
+                  key: {{ .Values.postgres.auth.dbKey }}
           {{- with .Values.result.probe.liveness }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
