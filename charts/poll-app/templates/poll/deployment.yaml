@@ -42,7 +42,6 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.redis.auth.secretName }}
                   key: {{ .Values.redis.auth.passwordKey }}
-                  optional: true
           {{- end }}
           {{- with .Values.poll.probe.liveness }}
           livenessProbe:
