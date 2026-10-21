@@ -68,3 +68,7 @@ Resource names
 {{- define "poll-app.result.fullname" -}}
 {{- printf "%s-result" (include "poll-app.fullname" . | trunc 58 | trimSuffix "-") }}
 {{- end }}
+
+{{- define "poll-app.worker.fullname" -}}
+{{- printf "%s-worker" (include "poll-app.fullname" . | trunc 58 | trimSuffix "-") }}
+{{- end }}
