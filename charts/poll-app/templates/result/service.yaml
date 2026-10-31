@@ -5,6 +5,10 @@ metadata:
   labels:
     {{- include "poll-app.labels" . | nindent 4 }}
     app.kubernetes.io/component: result
+  {{- if .Values.result.service.stickyCookie }}
+  annotations:
+    traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
+  {{- end }}
 spec:
   selector:
     {{- include "poll-app.selectorLabels" . | nindent 4 }}

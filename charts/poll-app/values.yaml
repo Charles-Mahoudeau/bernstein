@@ -103,6 +103,10 @@ result:
     pullPolicy: IfNotPresent
   service:
     port: 80
+    # Traefik pins each browser to one pod with a cookie. The page uses
+    # Socket.IO long-polling, whose requests fail on another pod ("Session ID
+    # unknown"), so without this 2 replicas break the live tally.
+    stickyCookie: true
   ingress:
     enabled: true
     className: traefik
