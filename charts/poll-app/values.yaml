@@ -19,9 +19,9 @@ poll:
   resources:
     requests:
       cpu: 50m
-      memory: 64Mi
+      memory: 96Mi
     limits:
-      memory: 128Mi
+      memory: 192Mi
   image:
     repository: poll
     tag: "" # defaults to .Chart.AppVersion
@@ -53,7 +53,7 @@ worker:
   resources:
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 128Mi
     limits:
       memory: 512Mi
   image:
@@ -80,10 +80,10 @@ result:
   replicas: 1
   resources:
     requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
+      cpu: 100m
       memory: 128Mi
+    limits:
+      memory: 256Mi
   image:
     repository: result
     tag: "" # defaults to .Chart.AppVersion
