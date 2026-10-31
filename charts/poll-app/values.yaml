@@ -28,10 +28,16 @@ limitRange:
     memory: 1Gi
 
 poll:
-  replicas: 2
+  replicas: 2 # Ignored when autoscaling.enabled: the HPA owns the replica count
+  autoscaling:
+    enabled: true
+    minReplicas: 2 # Not below 2: the PodDisruptionBudget needs a second pod
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 70 # Of the CPU request below
+    scaleDownStabilizationSeconds: 120
   resources:
     requests:
-      cpu: 250m
+      cpu: 250m # The HPA target is a share of this value
       memory: 96Mi
     limits:
       memory: 192Mi

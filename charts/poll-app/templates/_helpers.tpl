@@ -72,3 +72,35 @@ Resource names
 {{- define "poll-app.worker.fullname" -}}
 {{- printf "%s-worker" (include "poll-app.fullname" . | trunc 58 | trimSuffix "-") }}
 {{- end }}
+
+{{/*
+HorizontalPodAutoscaler of a component. Called with a dict: root (the top-level
+context), component, name (the Deployment name) and autoscaling (the component's
+autoscaling values).
+*/}}
+{{- define "poll-app.hpa" -}}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .name }}
+  labels:
+    {{- include "poll-app.labels" .root | nindent 4 }}
+    app.kubernetes.io/component: {{ .component }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .name }}
+  minReplicas: {{ .autoscaling.minReplicas }}
+  maxReplicas: {{ .autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .autoscaling.targetCPUUtilizationPercentage }}
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: {{ .autoscaling.scaleDownStabilizationSeconds }}
+{{- end }}
