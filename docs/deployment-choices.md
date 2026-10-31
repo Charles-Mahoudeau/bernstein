@@ -72,6 +72,10 @@ Every component sets CPU and memory requests and a memory limit, with no CPU lim
 
 Poll, Result and Worker run 2 replicas, the smallest count that survives losing a pod or a node. Redis and Postgres run 1, since a second replica would not share their data. The reasoning and the benchmark figures behind it are in [replica-counts.md](replica-counts.md).
 
+## Restart policies
+
+Every workload is long-running (no Job or CronJob), so all five use `restartPolicy: Always`, the only value a Deployment or StatefulSet accepts. Liveness probes only check that the process is alive (`/healthz`), while readiness probes check the dependencies, so a Redis or PostgreSQL outage takes pods out of the Service instead of restarting them. The reference on the available policies, CrashLoopBackOff and the probe review (postgres startup probe, SIGTERM handling in `result`) is in [restart-policies.md](restart-policies.md).
+
 ## Required `.env` variables
 
 Copy `.env.example` to `.env` (git-ignored) and fill it in. The CLI reads it at startup. Neither the Azure credentials nor `POSTGRES_PASSWORD` are committed. Every variable has a default except the secrets; the full table is in [scripts.md](scripts.md#configuration).
