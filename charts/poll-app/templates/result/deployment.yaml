@@ -11,7 +11,9 @@ spec:
     rollingUpdate:
       maxUnavailable: 0
       maxSurge: 1
+  {{- if not .Values.result.autoscaling.enabled }}
   replicas: {{ .Values.result.replicas }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "poll-app.selectorLabels" . | nindent 6 }}

@@ -1,0 +1,3 @@
+{{- if .Values.result.autoscaling.enabled }}
+{{ include "poll-app.hpa" (dict "root" . "component" "result" "name" (include "poll-app.result.fullname" .) "autoscaling" .Values.result.autoscaling) }}
+{{- end }}

@@ -96,10 +96,16 @@ worker:
       failureThreshold: 3
 
 result:
-  replicas: 2
+  replicas: 2 # Ignored when autoscaling.enabled: the HPA owns the replica count
+  autoscaling:
+    enabled: true
+    minReplicas: 2 # Not below 2: the PodDisruptionBudget needs a second pod
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70 # Of the CPU request below
+    scaleDownStabilizationSeconds: 120
   resources:
     requests:
-      cpu: 100m
+      cpu: 100m # The HPA target is a share of this value
       memory: 128Mi
     limits:
       memory: 256Mi
