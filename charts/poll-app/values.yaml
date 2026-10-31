@@ -131,11 +131,12 @@ postgres:
   port: 5432
   storage:
     size: 1Gi
-  resources:
+  resources: # requests = limits, so the pod is Guaranteed QoS and evicted last
     requests:
-      cpu: 100m
-      memory: 256Mi
+      cpu: 200m
+      memory: 512Mi
     limits:
+      cpu: 200m
       memory: 512Mi
   # Secret created by the deploy script, not by the chart
   auth:
