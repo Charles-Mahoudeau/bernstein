@@ -1,0 +1,13 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "poll-app.result.fullname" . }}
+  labels:
+    {{- include "poll-app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: result
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      {{- include "poll-app.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: result
