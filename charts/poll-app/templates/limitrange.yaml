@@ -1,0 +1,17 @@
+{{- with .Values.limitRange }}
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: {{ include "poll-app.fullname" $ }}
+  labels:
+    {{- include "poll-app.labels" $ | nindent 4 }}
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        {{- toYaml .defaultRequest | nindent 8 }}
+      default:
+        {{- toYaml .default | nindent 8 }}
+      max:
+        {{- toYaml .max | nindent 8 }}
+{{- end }}
