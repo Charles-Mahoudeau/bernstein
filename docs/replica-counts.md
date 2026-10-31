@@ -20,4 +20,13 @@ Two is the smallest count that tolerates losing one pod or one node, and it is e
 
 Redis and Postgres are not highly available: while their single pod restarts, voting or results are briefly unavailable, but no data is lost (Redis is only a queue, Postgres has a persistent volume). Poll and Result stay up through the ingress.
 
+## Spread and disruption budgets
+
+Two replicas only help if they are on different nodes and a drain cannot evict both at once. Each of Poll, Result and Worker therefore has:
+
+- a `PodDisruptionBudget` with `minAvailable: 1` (`templates/<component>/pdb.yaml`): `kubectl drain` and AKS node upgrades evict one replica, wait for it to be rescheduled and ready, then evict the next;
+- a `topologySpreadConstraints` entry (`maxSkew: 1` on `kubernetes.io/hostname`, `matchLabelKeys: [pod-template-hash]`) so the replicas of the current revision land on different nodes.
+
+The constraint uses `ScheduleAnyway`, a preference: a single-node cluster still schedules, and a rollout is never blocked by a full node. Check the placement with `kubectl get pods -n poll -o wide`. A PDB needs at least two replicas: with one, `minAvailable: 1` can never be satisfied and a drain hangs.
+
 The autoscaler minimum and the node count start from these numbers. If the cluster benchmark shows Poll saturating its CPU, scale Poll first (replicas or gunicorn workers).
