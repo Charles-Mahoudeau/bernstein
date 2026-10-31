@@ -57,3 +57,4 @@ spec:
                 name: {{ .Values.redis.auth.secretName }}
                 key: {{ .Values.redis.auth.passwordKey }}
         {{- end }}
+      restartPolicy: Always
