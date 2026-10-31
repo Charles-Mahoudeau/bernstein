@@ -64,6 +64,14 @@ Traefik is a second chart, installed from its official repository. ingress-nginx
 - If the new pods never become ready, the rollout stalls and the old pods keep serving.
 - Kubernetes alone does not roll back; it only marks the rollout failed after `progressDeadlineSeconds`. `helm upgrade --rollback-on-failure --timeout 3m` waits for readiness and reverts to the previous release on failure. Helm 4 renamed `--atomic` to `--rollback-on-failure` (and `--wait` defaults to the `watcher` strategy with it); the CLI picks the right flags for Helm 3 or 4.
 
+## Resource requests and limits
+
+Every component sets CPU and memory requests and a memory limit, with no CPU limit except on Postgres, which is Guaranteed QoS so it is evicted last. A LimitRange covers containers that declare nothing, and there is no ResourceQuota. The reasoning, the values and the benchmark behind them are in [resource-limits.md](resource-limits.md).
+
+## Replica counts
+
+Poll, Result and Worker run 2 replicas, the smallest count that survives losing a pod or a node. Redis and Postgres run 1, since a second replica would not share their data. The reasoning and the benchmark figures behind it are in [replica-counts.md](replica-counts.md).
+
 ## Required `.env` variables
 
 Copy `.env.example` to `.env` (git-ignored) and fill it in. The CLI reads it at startup. Neither the Azure credentials nor `POSTGRES_PASSWORD` are committed. Every variable has a default except the secrets; the full table is in [scripts.md](scripts.md#configuration).

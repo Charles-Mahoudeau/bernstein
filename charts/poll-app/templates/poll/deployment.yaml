@@ -26,6 +26,16 @@ spec:
       imagePullSecrets:
         - name: {{ . }}
       {{- end }}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "poll-app.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: poll
+          matchLabelKeys:
+            - pod-template-hash
       containers:
         - name: {{ include "poll-app.poll.fullname" . }}
           image: "{{ with .Values.registry.url | trimSuffix "/" }}{{ . }}/{{ end }}{{ .Values.poll.image.repository }}:{{ .Values.poll.image.tag | default .Chart.AppVersion }}"

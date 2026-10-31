@@ -14,14 +14,27 @@ secrets:
   registry:
     name: ""
 
+# Namespace safety net: applies to any container that declares no resources,
+# and rejects containers asking for more than max. Every workload below sets
+# its own resources, so this only catches future additions.
+limitRange:
+  defaultRequest:
+    cpu: 50m
+    memory: 64Mi
+  default:
+    memory: 128Mi
+  max:
+    cpu: "1"
+    memory: 1Gi
+
 poll:
-  replicas: 1
+  replicas: 2
   resources:
     requests:
       cpu: 50m
-      memory: 64Mi
+      memory: 96Mi
     limits:
-      memory: 128Mi
+      memory: 192Mi
   image:
     repository: poll
     tag: "" # defaults to .Chart.AppVersion
@@ -53,7 +66,7 @@ worker:
   resources:
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 128Mi
     limits:
       memory: 512Mi
   image:
@@ -77,13 +90,13 @@ worker:
       failureThreshold: 3
 
 result:
-  replicas: 1
+  replicas: 2
   resources:
     requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
+      cpu: 100m
       memory: 128Mi
+    limits:
+      memory: 256Mi
   image:
     repository: result
     tag: "" # defaults to .Chart.AppVersion
@@ -131,11 +144,12 @@ postgres:
   port: 5432
   storage:
     size: 1Gi
-  resources:
+  resources: # requests = limits, so the pod is Guaranteed QoS and evicted last
     requests:
-      cpu: 100m
-      memory: 256Mi
+      cpu: 200m
+      memory: 512Mi
     limits:
+      cpu: 200m
       memory: 512Mi
   # Secret created by the deploy script, not by the chart
   auth:
