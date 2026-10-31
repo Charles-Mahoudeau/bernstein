@@ -70,7 +70,7 @@ Every component sets CPU and memory requests and a memory limit, with no CPU lim
 
 ## Replica counts
 
-Poll, Result and Worker run 2 replicas, the smallest count that survives losing a pod or a node. Redis and Postgres run 1, since a second replica would not share their data. The reasoning and the benchmark figures behind it are in [replica-counts.md](replica-counts.md).
+Poll, Result and Worker run 2 replicas, the smallest count that survives losing a pod or a node. Redis and Postgres run 1, since a second replica would not share their data. Poll (2 to 4) and Result (2 to 3) also scale on CPU. The reasoning and the benchmark figures behind it are in [replica-counts.md](replica-counts.md) and [autoscaling.md](autoscaling.md).
 
 ## Required `.env` variables
 
