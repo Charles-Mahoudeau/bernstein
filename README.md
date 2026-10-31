@@ -23,4 +23,4 @@ scripts/bernstein down --all           # delete the cluster and the registry
 
 Every command prints the `az`, `kubectl`, `helm` and `docker` commands it runs, and `--dry-run` prints them without running anything.
 
-Design notes: [docs/deployment-choices.md](docs/deployment-choices.md).
+Design notes: [docs/deployment-choices.md](docs/deployment-choices.md). Resource requests and limits, with a benchmark: [docs/resource-limits.md](docs/resource-limits.md).
