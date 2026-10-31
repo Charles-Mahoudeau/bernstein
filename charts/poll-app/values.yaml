@@ -28,7 +28,7 @@ limitRange:
     memory: 1Gi
 
 poll:
-  replicas: 1
+  replicas: 2
   resources:
     requests:
       cpu: 50m
@@ -90,7 +90,7 @@ worker:
       failureThreshold: 3
 
 result:
-  replicas: 1
+  replicas: 2
   resources:
     requests:
       cpu: 100m
