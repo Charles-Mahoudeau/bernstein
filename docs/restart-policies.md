@@ -56,18 +56,20 @@ Every workload is long-running, so `Always` is the only valid choice. The chart 
 
 ### poll, result, worker
 
-Liveness is `GET /healthz`, which returns a static 200 in all three apps. It does not touch Redis or PostgreSQL, so a backend outage never restarts the app pods. Readiness is `GET /readyz`, which does check the dependencies (Redis for poll, PostgreSQL for result, both for worker). During an outage the pods leave the Service endpoints and come back by themselves when the backend recovers.
+Liveness is `GET /healthz`, which returns a static 200 in all three apps. It does not touch Redis or PostgreSQL, so a backend outage never restarts the `poll` and `result` pods (`worker` is the exception, see below). Readiness is `GET /readyz`, which does check the dependencies (Redis for poll, PostgreSQL for result, both for worker). During an outage the pods leave the Service endpoints and come back by themselves when the backend recovers.
 
 `poll` sets explicit probe timeouts. Under overload, the default 1 s timeout made `/healthz` fail on a pod that was only busy, and the kubelet restarted it, removing capacity when it was most needed. Liveness now allows 5 s per probe and 6 failures (about 1 minute), readiness 3 s and 3 failures. Liveness is the more lenient of the two on purpose: a busy pod first leaves the Service and gets less traffic, and is restarted only if it stays stuck. Readiness is not made strict either: if both pods went unready at once, the Service would have no endpoints left. gunicorn also runs 4 threads, so a probe no longer waits behind every queued vote. Measurements in [autoscaling.md](autoscaling.md#overload-and-probes-issue-40).
 
 `worker` also has a `startupProbe` on `/healthz` (`periodSeconds: 5`, `failureThreshold: 24`, so 2 minutes) for the JVM startup, whose duration varies with the CPU available on the node. Liveness and readiness therefore have no initial delay, and a pod becomes Ready as soon as the JVM answers instead of after a fixed 15s. The startup probe uses `/healthz` and not `/readyz`: a failed startup probe kills the container, so a backend outage during a rollout would otherwise put the new pods in CrashLoopBackOff. `poll` and `result` start in a second or two, so they keep a short initial delay instead.
+
+`worker` liveness is `GET /readyz`, not `/healthz`. The worker opens its PostgreSQL connection once at startup and never reopens it. After a PostgreSQL restart that connection is dead: `/readyz` returns 503 for good, and the main loop stays blocked on the Redis queue until a vote arrives and crashes it. With liveness on `/healthz` the pod stayed NotReady for 37 minutes until someone voted (issue #42). With liveness on `/readyz` (`periodSeconds: 10`, `failureThreshold: 6`, `timeoutSeconds: 3`), the kubelet restarts it after about 1 minute and the new process connects again. The cost: during a long PostgreSQL or Redis outage the worker restarts every minute or so and goes through CrashLoopBackOff, so once the backend is back it can wait up to 5 minutes before it starts again. Votes wait in the Redis queue meanwhile. The real fix is a reconnection in `Worker.java`. Readiness runs every 5 s: the worker has no Service, so a short period costs nothing, and a broken worker shows as NotReady within 15 s.
 
 ### Fatal exits in the apps
 
 Some failures bypass the probes and end the process directly, which `restartPolicy: Always` turns into a restart:
 
 - `result` calls `process.exit(1)` on a lost PostgreSQL connection or a failed query. After a PostgreSQL restart, `result` therefore crashes and restarts until the database is back, and goes through CrashLoopBackOff if the outage lasts. The app retries the initial connection up to 1000 times, which covers startup but not a later loss.
-- `worker` exits with code 1 when interrupted while sleeping and when the JDBC driver is missing.
+- `worker` exits with code 1 when interrupted while sleeping and when the JDBC driver is missing. It also exits on a lost Redis connection (`blpop` throws) and on a failed vote insert, after pushing the vote back to the queue. It does not notice a lost PostgreSQL connection until the next vote, hence its liveness on `/readyz`.
 
 This is acceptable: the restart is the recovery mechanism, and readiness keeps traffic away meanwhile.
 

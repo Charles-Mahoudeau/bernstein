@@ -16,7 +16,7 @@ The benchmark in [resource-limits.md](resource-limits.md#benchmark) was run with
 - **Availability:** the benchmark measures load, not failures. Zero downtime during a rolling update, a pod loss or a node drain (see [scripts.md](scripts.md)) needs a second replica already serving, whatever the load.
 - **Worker:** at 2% CPU each, the workers drain the queue immediately, so two are for availability, not throughput.
 
-Two is the smallest count that tolerates losing one pod or one node, and it is enough for this project: the application is a demo with a few users. A third replica would cost cluster resources without improving what the tests check. With these counts the total requests are 1.15 CPU and about 1.3 GiB. A single `B2s_v2` node has 1.9 CPU allocatable, shared with kube-system, so after a drain it is tight ([resource-limits.md](resource-limits.md#values)).
+Two is the smallest count that tolerates losing one pod or one node, and it is enough for this project: the application is a demo with a few users. A third replica would cost cluster resources without improving what the tests check. With these counts the total requests are 1.15 CPU and about 1.3 GiB. A single `B2s_v2` node has 1.9 CPU allocatable, shared with kube-system, so after a drain it does not hold everything, and Redis and Postgres take priority over a second replica ([node-count.md](node-count.md#after-losing-a-node)).
 
 Redis and Postgres are not highly available: while their single pod restarts, voting or results are briefly unavailable, but no data is lost (Redis is only a queue, Postgres has a persistent volume). Poll and Result stay up through the ingress.
 

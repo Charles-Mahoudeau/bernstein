@@ -78,7 +78,7 @@ Every workload is long-running (no Job or CronJob), so all five use `restartPoli
 
 ## Node count and size
 
-The cluster is 2 × `Standard_B2s_v2`. One node would hold the 0.75 CPU / 1.25 GiB of requests, but two are needed to spread the replicas and survive a drain or a node loss. The derivation is in [node-count.md](node-count.md).
+The cluster is 2 × `Standard_B2s_v2`. Two are needed to spread the replicas and survive a drain or a node loss. After a node loss the other one is full, so Redis and Postgres have a higher priority than the replicas. The derivation is in [node-count.md](node-count.md).
 
 ## Load balancing
 
