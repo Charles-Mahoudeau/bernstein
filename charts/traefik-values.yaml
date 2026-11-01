@@ -5,16 +5,21 @@
 deployment:
   replicas: 2
 
-# Spread the replicas over the nodes. ScheduleAnyway rather than
-# DoNotSchedule: during a drain the evicted pod can still start on the
-# remaining node instead of staying Pending.
+# Spread the replicas over the nodes. DoNotSchedule rather than ScheduleAnyway:
+# two Traefik pods on one node would both be lost with it. The cost: during a
+# drain the evicted pod stays Pending until the node is back, and the PDB below
+# keeps the other one running.
 topologySpreadConstraints:
   - labelSelector:
       matchLabels:
         app.kubernetes.io/name: traefik
+    # Only the pods of the same revision count, so a rollout spreads the new
+    # pods instead of being balanced against the old ones
+    matchLabelKeys:
+      - pod-template-hash
     maxSkew: 1
     topologyKey: kubernetes.io/hostname
-    whenUnsatisfiable: ScheduleAnyway
+    whenUnsatisfiable: DoNotSchedule
 
 # A drain never evicts the last running Traefik
 podDisruptionBudget:
