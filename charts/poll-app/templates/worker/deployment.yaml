@@ -83,6 +83,10 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.postgres.auth.secretName }}
                   key: {{ .Values.postgres.auth.userKey }}
+          {{- with .Values.worker.probe.startup }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- with .Values.worker.probe.liveness }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}

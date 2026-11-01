@@ -69,20 +69,24 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.postgres.auth.secretName }}
                   key: {{ .Values.postgres.auth.userKey }}
+          startupProbe:
+            exec:
+              command: [ "sh", "-c", "pg_isready -h 127.0.0.1 -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\"" ]
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 60
           readinessProbe:
             exec:
               command: [ "sh", "-c", "pg_isready -h 127.0.0.1 -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\"" ]
-            initialDelaySeconds: 5
             periodSeconds: 5
             timeoutSeconds: 3
             failureThreshold: 3
           livenessProbe:
             exec:
               command: [ "sh", "-c", "pg_isready -h 127.0.0.1 -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\"" ]
-            initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 3
-            failureThreshold: 6
+            failureThreshold: 3
           {{- with .Values.postgres.resources }}
           resources:
             {{- toYaml . | nindent 12 }}

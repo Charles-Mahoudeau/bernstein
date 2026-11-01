@@ -33,7 +33,7 @@ The cluster is 2 × `Standard_B2s_v2` (2 vCPU, 8 GiB each). Total requests are 1
 
 | Component | Replicas | CPU request | Memory request | Memory limit | Why |
 |---|---|---|---|---|---|
-| poll | 2 to 4 | 250m | 96Mi | 192Mi | Flask + gunicorn, one process. Measured peak 63MiB. The CPU request is the base of the autoscaler target, see [autoscaling.md](autoscaling.md). |
+| poll | 2 to 4 | 250m | 96Mi | 192Mi | Flask + gunicorn, one process with 4 threads. Measured peak 63MiB. The CPU request is the base of the autoscaler target, see [autoscaling.md](autoscaling.md). |
 | result | 2 to 3 | 100m | 128Mi | 256Mi | Node 24 + Socket.IO. Memory grows with connected viewers: 49MiB at 500. |
 | worker | 2 | 100m | 128Mi | 512Mi | JVM. Its max heap is 25% of the limit (128MiB), plus metaspace and thread stacks. Measured peak 65MiB, so the request is about twice the usage. |
 | redis | 1 | 50m | 64Mi | 128Mi | Holds the vote queue, which the workers drain immediately. Measured peak 13MiB. |
@@ -86,7 +86,7 @@ Peak memory and CPU per container (CPU is a percentage of one core):
 - **Result grows with viewers, but slowly.** It went from 24 MiB idle to 31 MiB with 100 viewers and 49 MiB with 500 viewers, about 50 KiB per connection. The 256 MiB limit holds roughly 4,000 viewers by that trend. That is more than the project needs, and cheap on this cluster. The previous 128 MiB limit would also have survived this benchmark, so the increase is deliberate headroom, not a fix for an observed problem.
 - **The JVM request is about twice its usage.** The workers peaked at 65 MiB against a 128 MiB request, which leaves room for JVM warmup. The 512 MiB limit stays, so a larger heap still fits if the workload grows.
 - **Redis and Postgres are over-provisioned by 8 to 10 times.** Redis only holds votes until a worker takes them, and the table is tiny. The 128 MiB and 512 MiB limits protect against a runaway queue (for example if the workers are down for a while) and a growing table, not against current use.
-- **Poll is the bottleneck, and CPU is the reason, not memory.** One gunicorn sync worker uses about 85% of a core and caps throughput near 330 votes/s. The latency under heavy load (p99 709 ms) is queueing in that single worker. The 50m CPU request does not limit it, because there is no CPU limit and the node has spare cores. If Poll needs to take more load, add gunicorn workers (`--workers`) or replicas. Raising memory would not help.
+- **Poll is the bottleneck, and CPU is the reason, not memory.** One gunicorn sync worker uses about 85% of a core and caps throughput near 330 votes/s. The latency under heavy load (p99 709 ms) is queueing in that single worker. The 50m CPU request does not limit it, because there is no CPU limit and the node has spare cores. If Poll needs to take more load, add gunicorn workers (`--workers`) or replicas. Raising memory would not help. See [autoscaling.md](autoscaling.md#overload-and-probes).
 - **The workers keep up easily.** At 2% CPU each, the queue never builds and the Result tally follows the votes.
 
 ## Limits of the benchmark
