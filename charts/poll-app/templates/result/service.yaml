@@ -5,9 +5,14 @@ metadata:
   labels:
     {{- include "poll-app.labels" . | nindent 4 }}
     app.kubernetes.io/component: result
-  {{- if .Values.result.service.stickyCookie }}
+  {{- if or .Values.result.service.stickyCookie .Values.traefik.resilience.enabled }}
   annotations:
+    {{- if .Values.result.service.stickyCookie }}
     traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
+    {{- end }}
+    {{- if .Values.traefik.resilience.enabled }}
+    traefik.ingress.kubernetes.io/service.serverstransport: {{ printf "%s-%s@kubernetescrd" .Release.Namespace (include "poll-app.traefik.transportName" .) }}
+    {{- end }}
   {{- end }}
 spec:
   selector:

@@ -112,3 +112,15 @@ spec:
     scaleDown:
       stabilizationWindowSeconds: {{ .autoscaling.scaleDownStabilizationSeconds }}
 {{- end }}
+
+{{/*
+Traefik resources shared by the poll and result routes. The annotations that
+reference them use the <namespace>-<name>@kubernetescrd form.
+*/}}
+{{- define "poll-app.traefik.retryName" -}}
+{{- printf "%s-retry" (include "poll-app.fullname" . | trunc 57 | trimSuffix "-") }}
+{{- end }}
+
+{{- define "poll-app.traefik.transportName" -}}
+{{- printf "%s-transport" (include "poll-app.fullname" . | trunc 54 | trimSuffix "-") }}
+{{- end }}

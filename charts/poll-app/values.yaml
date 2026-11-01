@@ -35,6 +35,19 @@ backendPriority:
   enabled: true
   value: 1000 # Above the default 0 of the other pods, far below system-*-critical
 
+# Traefik talks to pod IPs taken from the Service endpoints. When a node dies,
+# its pods stay in the endpoints until the node is declared NotReady (about
+# 40s + propagation), so requests sent to them hang for the dial timeout
+# (30s by default). A short dial timeout plus a retry on another pod turns that
+# into a short delay. Needs the Traefik CRDs (installed with the Traefik chart).
+traefik:
+  resilience:
+    enabled: true
+    dialTimeout: 2s
+    retry:
+      attempts: 3
+      initialInterval: 100ms # Doubles at each attempt
+
 poll:
   replicas: 2 # Ignored when autoscaling.enabled: the HPA owns the replica count
   autoscaling:

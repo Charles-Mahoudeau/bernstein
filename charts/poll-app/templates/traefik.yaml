@@ -1,0 +1,22 @@
+{{- if .Values.traefik.resilience.enabled }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "poll-app.traefik.retryName" . }}
+  labels:
+    {{- include "poll-app.labels" . | nindent 4 }}
+spec:
+  retry:
+    attempts: {{ .Values.traefik.resilience.retry.attempts }}
+    initialInterval: {{ .Values.traefik.resilience.retry.initialInterval }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: {{ include "poll-app.traefik.transportName" . }}
+  labels:
+    {{- include "poll-app.labels" . | nindent 4 }}
+spec:
+  forwardingTimeouts:
+    dialTimeout: {{ .Values.traefik.resilience.dialTimeout }}
+{{- end }}
