@@ -53,6 +53,10 @@ spec:
           env:
             - name: REDIS_HOST
               value: {{ include "poll-app.redis.fullname" . | quote }}
+          {{- with .Values.poll.gunicorn.args }}
+            - name: GUNICORN_CMD_ARGS
+              value: {{ . | quote }}
+          {{- end }}
           {{- if .Values.redis.auth.enabled }}
             - name: REDIS_PASSWORD
               valueFrom:

@@ -47,24 +47,34 @@ poll:
     pullPolicy: IfNotPresent
   service:
     port: 80
+  # Passed to gunicorn as GUNICORN_CMD_ARGS. With the default sync worker, one
+  # request at a time is served and /healthz waits behind queued votes (#40).
+  # Threads rather than workers: each worker is a full Python process, and one
+  # process already covers the CPU request above
+  gunicorn:
+    args: "--worker-class gthread --threads 4"
   ingress:
     enabled: false
     className: traefik
     host: "" # Empty = match any host
   probe:
+    # More lenient than readiness: an overloaded pod must first leave the
+    # Service, and only be restarted if it stays stuck (about 1 minute)
     liveness:
       httpGet:
         path: /healthz
         port: http
       initialDelaySeconds: 5
       periodSeconds: 10
-      failureThreshold: 3
+      timeoutSeconds: 5
+      failureThreshold: 6
     readiness:
       httpGet:
         path: /readyz
         port: http
       initialDelaySeconds: 5
       periodSeconds: 10
+      timeoutSeconds: 3
       failureThreshold: 3
 
 worker:
