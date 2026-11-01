@@ -126,7 +126,7 @@ The Traefik settings live in `charts/traefik-values.yaml`, which `bernstein trae
 | `externalTrafficPolicy` | `Cluster`     | `Cluster`, set explicitly                       | See below                                                                           |
 | Load balancer SKU       | Standard      | Standard                                        | AKS default, Basic is retired                                                       |
 | Public IP               | Dynamic       | Dynamic                                         | See below                                                                           |
-| Session affinity        | None          | None                                            | See below                                                                           |
+| Session affinity        | None          | Cookie on Result only                           | See below                                                                           |
 
 `DoNotSchedule` rather than `ScheduleAnyway`: two Traefik pods on the same node are both lost when it dies (see the node-kill reports). The cost is that during a drain, the pod evicted from the drained node stays Pending until the node is back, so one Traefik serves alone meanwhile.
 
@@ -134,11 +134,13 @@ The Traefik settings live in `charts/traefik-values.yaml`, which `bernstein trae
 
 **Public IP.** The IP belongs to the Traefik Service: `bernstein traefik uninstall` releases it and the `nip.io` hostnames change. A static IP (`az network public-ip create` in the node resource group, then the `service.beta.kubernetes.io/azure-pip-name` annotation on the Service) would survive a reinstall. It was not set up because the CLI computes the hostnames from the current IP, and `bernstein status` prints them.
 
-**Session affinity.** Poll keeps no server-side state (the `voter_id` cookie is stored by the browser), so any replica can answer. Result is different: its page uses Socket.IO with the `polling` transport, and a Socket.IO session lives in the memory of the pod that opened it. With several Result replicas, a request reaching another pod is rejected (`Session ID unknown`) and the client reconnects. Result runs a single replica, so this does not happen today. Before scaling it, enable Traefik sticky sessions with an annotation on the Result Service:
+**Session affinity.** Poll keeps no server-side state (the `voter_id` cookie is stored by the browser), so any replica can answer. Result is different: its page uses Socket.IO with the `polling` transport, and a Socket.IO session lives in the memory of the pod that opened it. A request reaching another Result pod is rejected (`Session ID unknown`) and the client reconnects, which breaks the live tally. The chart therefore enables Traefik sticky sessions on the Result Service (`result.service.stickyCookie: true`), which adds this annotation:
 
 ```yaml
 traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
 ```
+
+Details in [traefik.md](traefik.md#sticky-cookie-on-result).
 
 ## Required `.env` variables
 

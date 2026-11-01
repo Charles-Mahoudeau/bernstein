@@ -48,4 +48,4 @@ Notes on `.env`:
 
 Every command prints the `az`, `kubectl`, `helm` and `docker` commands it runs, and `--dry-run` prints them without running anything.
 
-Design notes: [docs/deployment-choices.md](docs/deployment-choices.md). Resource requests and limits, with a benchmark: [docs/resource-limits.md](docs/resource-limits.md). Autoscaling of Poll, with a load test: [docs/autoscaling.md](docs/autoscaling.md). Node count and size: [docs/node-count.md](docs/node-count.md).
+Design notes: [docs/deployment-choices.md](docs/deployment-choices.md). Resource requests and limits, with a benchmark: [docs/resource-limits.md](docs/resource-limits.md). Autoscaling of Poll, with a load test: [docs/autoscaling.md](docs/autoscaling.md). Node count and size: [docs/node-count.md](docs/node-count.md). Traefik, its middleware and why: [docs/traefik.md](docs/traefik.md).
