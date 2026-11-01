@@ -80,18 +80,24 @@ worker:
     tag: "" # defaults to .Chart.AppVersion
     pullPolicy: IfNotPresent
   probe:
+    # Covers the JVM startup (up to 2 minutes). It must stay on /healthz:
+    # a failure kills the container, so it must not depend on Redis or PostgreSQL
+    startup:
+      httpGet:
+        path: /healthz
+        port: http
+      periodSeconds: 5
+      failureThreshold: 24
     liveness:
       httpGet:
         path: /healthz
         port: http
-      initialDelaySeconds: 15
       periodSeconds: 15
       failureThreshold: 3
     readiness:
       httpGet:
         path: /readyz
         port: http
-      initialDelaySeconds: 15
       periodSeconds: 15
       failureThreshold: 3
 

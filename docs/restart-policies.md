@@ -58,6 +58,8 @@ Every workload is long-running, so `Always` is the only valid choice. The chart 
 
 Liveness is `GET /healthz`, which returns a static 200 in all three apps. It does not touch Redis or PostgreSQL, so a backend outage never restarts the app pods. Readiness is `GET /readyz`, which does check the dependencies (Redis for poll, PostgreSQL for result, both for worker). During an outage the pods leave the Service endpoints and come back by themselves when the backend recovers.
 
+`worker` also has a `startupProbe` on `/healthz` (`periodSeconds: 5`, `failureThreshold: 24`, so 2 minutes) for the JVM startup, whose duration varies with the CPU available on the node. Liveness and readiness therefore have no initial delay, and a pod becomes Ready as soon as the JVM answers instead of after a fixed 15s. The startup probe uses `/healthz` and not `/readyz`: a failed startup probe kills the container, so a backend outage during a rollout would otherwise put the new pods in CrashLoopBackOff. `poll` and `result` start in a second or two, so they keep a short initial delay instead.
+
 ### Fatal exits in the apps
 
 Some failures bypass the probes and end the process directly, which `restartPolicy: Always` turns into a restart:
@@ -83,12 +85,11 @@ Liveness and readiness both use `redis-cli ping`. Redis has no persistence confi
 
 PostgreSQL does not write every change straight into its data files. It first appends a short record of the change to a log, the WAL (Write-Ahead Log), and updates the data files later in batches. After a hard kill or a node loss, the data files may lack changes that were already acknowledged, so on the next start PostgreSQL replays the WAL before it accepts connections ("database system was not properly shut down; automatic recovery in progress"). This takes seconds to minutes depending on how much log has accumulated. During recovery the server is running but `pg_isready` fails.
 
-Liveness uses `pg_isready` with `initialDelaySeconds: 30`, `periodSeconds: 10` and `failureThreshold: 6`, so the first kill can happen about 90s after start. If recovery takes longer than that, the kubelet kills the container mid-recovery, the next start has to begin recovery again, and it can loop.
+With only a liveness probe, its initial delay has to cover the whole startup. If recovery takes longer than that, the kubelet kills the container mid-recovery, the next start has to begin recovery again, and it can loop.
 
-A `startupProbe` fixes this. It runs first and keeps liveness switched off until it succeeds, after which liveness applies with tight settings. With a generous budget, for example `periodSeconds: 10` and `failureThreshold: 30` (5 minutes), PostgreSQL gets time to recover without being killed, and liveness no longer needs the long initial delay. With our small dataset, recovery takes seconds, so the risk here is low and the probe is a robustness improvement rather than a fix.
+A `startupProbe` (`pg_isready`, `periodSeconds: 5`, `failureThreshold: 60`, so 5 minutes) runs first and keeps liveness and readiness switched off until it succeeds. PostgreSQL gets time to recover, or to run initdb and `schema.sql` on the first start, without being killed. Liveness then has no initial delay and tight settings (`periodSeconds: 10`, `failureThreshold: 3`). With our small dataset, recovery takes seconds, so the risk was low and the probe is a robustness improvement rather than a fix.
 
 ## Possible follow-ups
 
-- Add a `startupProbe` to postgres (and optionally redis).
 - Handle SIGTERM in `result/server.js`.
 - Decide whether redis needs persistence, or document the loss as accepted.
