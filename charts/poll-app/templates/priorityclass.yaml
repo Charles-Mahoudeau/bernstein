@@ -1,0 +1,12 @@
+{{- if .Values.backendPriority.enabled }}
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: {{ include "poll-app.backendPriorityClassName" . }}
+  labels:
+    {{- include "poll-app.labels" . | nindent 4 }}
+value: {{ .Values.backendPriority.value }}
+globalDefault: false
+preemptionPolicy: PreemptLowerPriority
+description: "Redis and Postgres of {{ .Release.Namespace }}/{{ .Release.Name }}: single instances every other pod depends on"
+{{- end }}

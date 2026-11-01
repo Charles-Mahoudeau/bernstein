@@ -74,6 +74,14 @@ Resource names
 {{- end }}
 
 {{/*
+PriorityClass of Redis and Postgres. PriorityClasses are cluster-scoped, so the
+name includes the namespace: two releases of the chart must not share one.
+*/}}
+{{- define "poll-app.backendPriorityClassName" -}}
+{{- printf "%s-%s-backend" .Release.Namespace (include "poll-app.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
 HorizontalPodAutoscaler of a component. Called with a dict: root (the top-level
 context), component, name (the Deployment name) and autoscaling (the component's
 autoscaling values).

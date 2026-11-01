@@ -19,6 +19,9 @@ spec:
         {{- include "poll-app.labels" . | nindent 8 }}
         app.kubernetes.io/component: redis
     spec:
+      {{- if .Values.backendPriority.enabled }}
+      priorityClassName: {{ include "poll-app.backendPriorityClassName" . }}
+      {{- end }}
       containers:
       - name: {{ include "poll-app.redis.fullname" . }}
         image: {{ .Values.redis.containerImage }}

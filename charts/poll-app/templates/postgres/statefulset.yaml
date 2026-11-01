@@ -26,6 +26,9 @@ spec:
         {{- include "poll-app.labels" . | nindent 8 }}
         app.kubernetes.io/component: postgres
     spec:
+      {{- if .Values.backendPriority.enabled }}
+      priorityClassName: {{ include "poll-app.backendPriorityClassName" . }}
+      {{- end }}
       securityContext:
         runAsNonRoot: true
         runAsUser: 70
