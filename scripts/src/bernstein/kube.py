@@ -54,6 +54,11 @@ class Workload:
     def healthy(self) -> bool:
         return self.ready >= self.desired and self.updated >= self.desired
 
+    @property
+    def available(self) -> bool:
+        """At least one ready replica: all a cordoned two-node cluster can offer."""
+        return self.ready >= 1
+
 
 @dataclass(frozen=True)
 class Pod:
@@ -214,12 +219,22 @@ def workloads_summary(items: list[Workload]) -> str:
     return ", ".join(f"{w.component} {w.ready}/{w.desired}" for w in items)
 
 
-def wait_app_ready(settings: Settings, *, timeout: float = 300.0) -> None:
+def wait_app_ready(
+    settings: Settings, *, timeout: float = 300.0, min_one_replica: bool = False
+) -> None:
+    """Wait for every workload to be fully ready, or with ``min_one_replica`` for one replica each.
+
+    The second form is for a cordoned node: topology spread constraints keep the evicted
+    replicas Pending until the node is back, so the full count cannot be reached.
+    """
+
     def check() -> tuple[bool, str]:
         items = workloads(settings, echo=False)
-        return bool(items) and all(w.healthy for w in items), f"ready: {workloads_summary(items)}"
+        ok = bool(items) and all(w.available if min_one_replica else w.healthy for w in items)
+        return ok, f"ready: {workloads_summary(items)}"
 
-    wait_until("all workloads ready", check, timeout=timeout)
+    what = "every workload has a ready replica" if min_one_replica else "all workloads ready"
+    wait_until(what, check, timeout=timeout)
 
 
 def wait_nodes_ready(

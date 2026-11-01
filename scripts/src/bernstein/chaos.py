@@ -110,8 +110,9 @@ def drain(
                 )
             )
             m.event(f"{node.name} drained")
-            kube.wait_app_ready(settings)
-            m.event("all workloads ready on the remaining nodes")
+            # Replicas that no longer fit the spread constraints stay Pending until the uncordon
+            kube.wait_app_ready(settings, min_one_replica=True)
+            m.event("every workload has a ready replica on the remaining node")
         finally:
             run(kube.kubectl(settings, "uncordon", node.name, namespaced=False))
             m.event(f"{node.name} uncordoned")

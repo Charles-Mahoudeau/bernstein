@@ -29,7 +29,7 @@ Every pod except Postgres ends up in the Burstable QoS class (request below limi
 
 ## Values
 
-The cluster is 2 × `Standard_B2s_v2` (2 vCPU, 8 GiB each). Total requests are 1.15 CPU and about 1.3 GiB across all pods at the minimum replica counts (replica counts: [replica-counts.md](replica-counts.md)), and 1.65 CPU when Poll has scaled to 4 pods ([autoscaling.md](autoscaling.md)). Each node has 1.9 CPU allocatable, and on 2026-10-31 the nodes already carried 1.07 and 1.29 CPU of requests, kube-system included. Whether one node holds everything after a drain was not tested. It is tight at the minimum counts, and with 4 Poll pods a drain would probably leave a pod Pending.
+The cluster is 2 × `Standard_B2s_v2` (2 vCPU, 8 GiB each). Total requests are 1.15 CPU and about 1.3 GiB across all pods at the minimum replica counts (replica counts: [replica-counts.md](replica-counts.md)), and 1.65 CPU when Poll has scaled to 4 pods ([autoscaling.md](autoscaling.md)). Each node has 1.9 CPU allocatable, and on 2026-10-31 the nodes already carried 1.07 and 1.29 CPU of requests, kube-system included. One node does not hold everything after a drain: the drain test of issue #42 left Postgres Pending with `Insufficient cpu` (1.85 of 1.9 CPU requested on the remaining node). Redis and Postgres now have a higher priority so that a replica of another component is evicted instead, see [node-count.md](node-count.md#after-losing-a-node).
 
 | Component | Replicas | CPU request | Memory request | Memory limit | Why |
 |---|---|---|---|---|---|

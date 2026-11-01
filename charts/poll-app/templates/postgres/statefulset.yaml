@@ -26,6 +26,9 @@ spec:
         {{- include "poll-app.labels" . | nindent 8 }}
         app.kubernetes.io/component: postgres
     spec:
+      {{- if .Values.backendPriority.enabled }}
+      priorityClassName: {{ include "poll-app.backendPriorityClassName" . }}
+      {{- end }}
       securityContext:
         runAsNonRoot: true
         runAsUser: 70
@@ -72,13 +75,13 @@ spec:
           startupProbe:
             exec:
               command: [ "sh", "-c", "pg_isready -h 127.0.0.1 -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\"" ]
-            periodSeconds: 5
+            periodSeconds: 2
             timeoutSeconds: 3
-            failureThreshold: 60
+            failureThreshold: 150
           readinessProbe:
             exec:
               command: [ "sh", "-c", "pg_isready -h 127.0.0.1 -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\"" ]
-            periodSeconds: 5
+            periodSeconds: 2
             timeoutSeconds: 3
             failureThreshold: 3
           livenessProbe:

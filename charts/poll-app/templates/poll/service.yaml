@@ -5,6 +5,10 @@ metadata:
   labels:
     {{- include "poll-app.labels" . | nindent 4 }}
     app.kubernetes.io/component: poll
+  {{- if .Values.traefik.resilience.enabled }}
+  annotations:
+    traefik.ingress.kubernetes.io/service.serverstransport: {{ printf "%s-%s@kubernetescrd" .Release.Namespace (include "poll-app.traefik.transportName" .) }}
+  {{- end }}
 spec:
   selector:
     {{- include "poll-app.selectorLabels" . | nindent 4 }}

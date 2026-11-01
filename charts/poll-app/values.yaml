@@ -27,6 +27,27 @@ limitRange:
     cpu: "1"
     memory: 1Gi
 
+# Redis and Postgres are single instances: without them votes or results stop.
+# When one node is left (drain, node failure), its CPU requests are nearly full
+# and Postgres stayed Pending (issue #42). A higher priority lets the scheduler
+# evict a replica of poll, result or worker instead, which have a second one.
+backendPriority:
+  enabled: true
+  value: 1000 # Above the default 0 of the other pods, far below system-*-critical
+
+# Traefik talks to pod IPs taken from the Service endpoints. When a node dies,
+# its pods stay in the endpoints until the node is declared NotReady (about
+# 40s + propagation), so requests sent to them hang for the dial timeout
+# (30s by default). A short dial timeout plus a retry on another pod turns that
+# into a short delay. Needs the Traefik CRDs (installed with the Traefik chart).
+traefik:
+  resilience:
+    enabled: true
+    dialTimeout: 2s
+    retry:
+      attempts: 3
+      initialInterval: 100ms # Doubles at each attempt
+
 poll:
   replicas: 2 # Ignored when autoscaling.enabled: the HPA owns the replica count
   autoscaling:
@@ -98,17 +119,24 @@ worker:
         port: http
       periodSeconds: 5
       failureThreshold: 24
+    # On /readyz on purpose: the worker opens its PostgreSQL connection only at
+    # startup and never reopens it, so after a PostgreSQL restart only a container
+    # restart fixes it. About 1 minute of failures before the restart
     liveness:
       httpGet:
-        path: /healthz
+        path: /readyz
         port: http
-      periodSeconds: 15
-      failureThreshold: 3
+      periodSeconds: 10
+      timeoutSeconds: 3 # /readyz checks Redis then PostgreSQL: 1s is too short
+      failureThreshold: 6
+    # The worker has no Service, so a short period costs nothing and shows a
+    # broken worker within 15s
     readiness:
       httpGet:
         path: /readyz
         port: http
-      periodSeconds: 15
+      periodSeconds: 5
+      timeoutSeconds: 3
       failureThreshold: 3
 
 result:
@@ -147,12 +175,15 @@ result:
       initialDelaySeconds: 5
       periodSeconds: 10
       failureThreshold: 3
+    # Short period: /readyz is one SELECT 1. After a PostgreSQL restart the pods
+    # come back Ready at the next probe, so a 10s period added up to 10s of 503s
     readiness:
       httpGet:
         path: /readyz
         port: http
       initialDelaySeconds: 5
-      periodSeconds: 10
+      periodSeconds: 3
+      timeoutSeconds: 2
       failureThreshold: 3
 
 redis:

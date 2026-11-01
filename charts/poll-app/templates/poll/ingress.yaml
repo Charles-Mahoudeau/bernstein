@@ -6,6 +6,10 @@ metadata:
   labels:
     {{- include "poll-app.labels" . | nindent 4 }}
     app.kubernetes.io/component: poll
+  {{- if .Values.traefik.resilience.enabled }}
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: {{ printf "%s-%s@kubernetescrd" .Release.Namespace (include "poll-app.traefik.retryName" .) }}
+  {{- end }}
 spec:
   ingressClassName: {{ .Values.poll.ingress.className }}
   rules:

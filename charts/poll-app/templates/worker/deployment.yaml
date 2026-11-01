@@ -29,11 +29,13 @@ spec:
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: ScheduleAnyway
+          whenUnsatisfiable: DoNotSchedule
           labelSelector:
             matchLabels:
-                    {{- include "poll-app.selectorLabels" . | nindent 14 }}
+              {{- include "poll-app.selectorLabels" . | nindent 14 }}
               app.kubernetes.io/component: worker
+          matchLabelKeys:
+            - pod-template-hash
       {{- with .Values.secrets.registry.name }}
       imagePullSecrets:
         - name: {{ . }}
