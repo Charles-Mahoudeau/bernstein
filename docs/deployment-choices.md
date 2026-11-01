@@ -76,6 +76,10 @@ Poll, Result and Worker run 2 replicas, the smallest count that survives losing 
 
 Every workload is long-running (no Job or CronJob), so all five use `restartPolicy: Always`, the only value a Deployment or StatefulSet accepts. Liveness probes only check that the process is alive (`/healthz`), while readiness probes check the dependencies, so a Redis or PostgreSQL outage takes pods out of the Service instead of restarting them. The reference on the available policies, CrashLoopBackOff and the probe review (postgres startup probe, SIGTERM handling in `result`) is in [restart-policies.md](restart-policies.md).
 
+## Node count and size
+
+The cluster is 2 × `Standard_B2s_v2`. One node would hold the 0.75 CPU / 1.25 GiB of requests, but two are needed to spread the replicas and survive a drain or a node loss. The derivation is in [node-count.md](node-count.md).
+
 ## Required `.env` variables
 
 Copy `.env.example` to `.env` (git-ignored) and fill it in. The CLI reads it at startup. Neither the Azure credentials nor `POSTGRES_PASSWORD` are committed. Every variable has a default except the secrets; the full table is in [scripts.md](scripts.md#configuration).
