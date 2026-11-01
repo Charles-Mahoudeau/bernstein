@@ -1,0 +1,26 @@
+# Overrides for the official Traefik chart (traefik/traefik), passed by
+# `bernstein traefik install`. Only the keys that differ from the chart
+# defaults are listed: `helm show values traefik/traefik` shows the rest.
+
+deployment:
+  replicas: 2
+
+# Spread the replicas over the nodes. ScheduleAnyway rather than
+# DoNotSchedule: during a drain the evicted pod can still start on the
+# remaining node instead of staying Pending.
+topologySpreadConstraints:
+  - labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: traefik
+    maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway
+
+# A drain never evicts the last running Traefik
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+service:
+  spec:
+    externalTrafficPolicy: Cluster

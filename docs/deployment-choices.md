@@ -80,6 +80,66 @@ Every workload is long-running (no Job or CronJob), so all five use `restartPoli
 
 The cluster is 2 × `Standard_B2s_v2`. One node would hold the 0.75 CPU / 1.25 GiB of requests, but two are needed to spread the replicas and survive a drain or a node loss. The derivation is in [node-count.md](node-count.md).
 
+## Load balancing
+
+A request to `http://poll.<ip>.nip.io` goes through three levels, each one spreading the traffic over the level below:
+
+```
+Client
+  │
+  ▼
+Azure Load Balancer (Standard SKU, public IP)   L4: picks a node
+  │  port 80 → NodePort of the traefik Service
+  ▼
+AKS node (Cilium eBPF, no kube-proxy)           forwards to a Traefik pod, on this node or another
+  │
+  ▼
+Traefik pod                                     L7: matches the Ingress host, picks an app pod
+  │  pod IP taken from the EndpointSlices
+  ▼
+poll / result pod (Ready pods only)
+```
+
+1. **Azure Load Balancer.** Nothing in the repository creates it. The Traefik chart creates a `Service` of type `LoadBalancer`, and the AKS cloud controller adds a public IP and rules for ports 80 and 443 to the cluster load balancer (`kubernetes`, in the node resource group `MC_<resource-group>_<cluster>_<location>`). It works at layer 4: each connection goes to one node, chosen by a hash of its source and destination addresses and ports, among the nodes that pass its health probe.
+2. **Traefik Service.** With `externalTrafficPolicy: Cluster`, every node accepts this traffic and forwards it to a Traefik pod, even when none runs on that node.
+3. **Traefik.** Traefik reads the Ingress resources (`ingressClassName: traefik`), matches the host and sends the request straight to a pod IP from the EndpointSlices of the `poll` or `result` Service; the ClusterIP itself is not used. Pods are picked in round-robin, and only Ready pods are listed, so the readiness probes decide which pods receive traffic.
+
+The Poll page shows `Processed by container ID <pod name>`: with several replicas, reloading the page shows the round-robin.
+
+```sh
+kubectl -n traefik get service traefik -o wide   # type, external IP, node ports
+kubectl -n traefik get pods -o wide              # one Traefik pod per node
+kubectl -n poll get endpointslices               # pods Traefik can send to
+az network lb rule list  -g MC_<rg>_<cluster>_<location> --lb-name kubernetes -o table
+az network lb probe list -g MC_<rg>_<cluster>_<location> --lb-name kubernetes -o table
+```
+
+### Choices
+
+The Traefik settings live in `charts/traefik-values.yaml`, which `bernstein traefik install` passes to the chart.
+
+| Setting                 | Chart default | Chosen                                          | Why                                                                                 |
+|-------------------------|---------------|-------------------------------------------------|-------------------------------------------------------------------------------------|
+| Traefik replicas        | 1             | 2                                               | With one pod, draining or losing its node cuts Poll and Result until it restarts    |
+| Spread over the nodes   | None          | `topologySpreadConstraints`, `ScheduleAnyway`   | Two replicas on the same node fail together                                         |
+| PodDisruptionBudget     | Disabled      | `minAvailable: 1`                               | A drain never evicts the last running Traefik                                       |
+| `externalTrafficPolicy` | `Cluster`     | `Cluster`, set explicitly                       | See below                                                                           |
+| Load balancer SKU       | Standard      | Standard                                        | AKS default, Basic is retired                                                       |
+| Public IP               | Dynamic       | Dynamic                                         | See below                                                                           |
+| Session affinity        | None          | None                                            | See below                                                                           |
+
+`ScheduleAnyway` rather than `DoNotSchedule`: during a drain, the pod evicted from the drained node can start on the remaining node, which already runs a Traefik, instead of staying Pending.
+
+**`Cluster` or `Local`.** `Local` only sends traffic to the nodes that run a Traefik pod and keeps the client IP (no extra hop, no SNAT). But the Azure health probe takes a few seconds to notice that a node lost its Traefik pod, and the requests sent to it meanwhile fail, which breaks the zero-downtime requirement during a drain. The application does not use the client IP, so `Cluster` was kept.
+
+**Public IP.** The IP belongs to the Traefik Service: `bernstein traefik uninstall` releases it and the `nip.io` hostnames change. A static IP (`az network public-ip create` in the node resource group, then the `service.beta.kubernetes.io/azure-pip-name` annotation on the Service) would survive a reinstall. It was not set up because the CLI computes the hostnames from the current IP, and `bernstein status` prints them.
+
+**Session affinity.** Poll keeps no server-side state (the `voter_id` cookie is stored by the browser), so any replica can answer. Result is different: its page uses Socket.IO with the `polling` transport, and a Socket.IO session lives in the memory of the pod that opened it. With several Result replicas, a request reaching another pod is rejected (`Session ID unknown`) and the client reconnects. Result runs a single replica, so this does not happen today. Before scaling it, enable Traefik sticky sessions with an annotation on the Result Service:
+
+```yaml
+traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
+```
+
 ## Required `.env` variables
 
 Copy `.env.example` to `.env` (git-ignored) and fill it in. The CLI reads it at startup. Neither the Azure credentials nor `POSTGRES_PASSWORD` are committed. Every variable has a default except the secrets; the full table is in [scripts.md](scripts.md#configuration).
