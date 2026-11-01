@@ -114,11 +114,11 @@ Measured on 2026-11-01 on the same cluster, with the app deployed in one namespa
 ## Limits
 
 - **New pods report no metrics for about a minute.** After a deploy the HPA shows `cpu: <unknown>/70%` until metrics-server has scraped the new pods. It does not scale during that time.
-- **Under overload the probes failed** with the first settings: one gunicorn sync worker and the default 1 s probe timeout. The kubelet restarted one pod after 3 failed liveness probes, and about 45 of 26,000 requests failed (resets and timeouts) during the run. Fixed by issue #40, see [Overload and probes](#overload-and-probes-issue-40).
-- **More pods did not mean more throughput in the test.** The in-cluster run reached about 107 req/s with 4 pods, below the 246 req/s of the earlier run with 2. The load generator, Redis and 4 busy Poll pods share two 2 vCPU nodes, and a pod was restarting. Node CPU was not sampled during this run. The rerun for issue #40 reached the same 107 req/s and showed DNS lookups timing out on every new connection, which is the likely cause.
+- **Under overload the probes failed** with the first settings: one gunicorn sync worker and the default 1 s probe timeout. The kubelet restarted one pod after 3 failed liveness probes, and about 45 of 26,000 requests failed (resets and timeouts) during the run. See [Overload and probes](#overload-and-probes).
+- **More pods did not mean more throughput in the test.** The in-cluster run reached about 107 req/s with 4 pods, below the 246 req/s of the earlier run with 2. The load generator, Redis and 4 busy Poll pods share two 2 vCPU nodes, and a pod was restarting. Node CPU was not sampled during this run. The rerun reached the same 107 req/s and showed DNS lookups timing out on every new connection, which is the likely cause.
 - **New Result pods only get new viewers.** A Socket.IO connection stays on its pod, so scaling up does not move existing viewers. The new pod filled slowly (16 to 20m against 100m or more on the others) and the average fell mainly because viewers left. Scaling down closes the connections on the removed pod, and the browser reconnects to another pod.
 - **Result needs a sticky cookie with more than one replica.** The page uses Socket.IO long-polling, and every polling request of a session must reach the same pod. Without stickiness, 9 of 12 test viewers got connection errors and none received a steady stream of updates. The chart therefore sets `traefik.ingress.kubernetes.io/service.sticky.cookie` on the Result Service (`result.service.stickyCookie`, on by default). After this, 12 of 12 viewers received every update. This applies to the 2 fixed replicas too, whatever the HPA does.
-- **A busy Poll pod uses a full core.** Since issue #40 Poll runs 4 gunicorn threads and has no CPU limit, so 4 busy pods could starve Redis, Result and the worker. See [Node autoscaling](#node-autoscaling).
+- **A busy Poll pod uses a full core.** Poll runs 4 gunicorn threads and has no CPU limit, so 4 busy pods could starve Redis, Result and the worker. See [Node autoscaling](#node-autoscaling).
 - **The numbers are from short tests.** 240 s with `hey`, a laptop ramp of 60 s per stage, and viewer ramps of a few minutes. The 70% target and the 250m request are starting values.
 
 ## Node autoscaling
@@ -153,6 +153,6 @@ kubectl --context bernstein-aks -n poll-charles delete job loadgen
 
 The votes are real rows in Postgres. The Service name uses the namespace, so change `poll-charles` if you deploy elsewhere. Read the `hey` summary with `logs` before deleting the Job: deleting it removes its pod and the output.
 
-Poll keeps connections open since issue #40, so through the Service the pods added by the HPA get no traffic from `hey`. To see them take load, send it through the ingress (`poll.<ip>.nip.io`), which Traefik balances per request.
+Poll keeps connections open, so through the Service the pods added by the HPA get no traffic from `hey`. To see them take load, send it through the ingress (`poll.<ip>.nip.io`), which Traefik balances per request.
 
 For Result, open polling-only Socket.IO viewers against the **ingress** host (`result.<ip>.nip.io`), not the Service. The sticky cookie is set by Traefik, and polling through the plain Service alternates between pods and fails. Watch `kubectl ... get hpa poll-app-result -w`. About 2,000 connected viewers were needed to cross the target.

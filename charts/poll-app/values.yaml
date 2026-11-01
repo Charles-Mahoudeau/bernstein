@@ -48,7 +48,7 @@ poll:
   service:
     port: 80
   # Passed to gunicorn as GUNICORN_CMD_ARGS. With the default sync worker, one
-  # request at a time is served and /healthz waits behind queued votes (#40).
+  # request at a time is served and /healthz waits behind queued votes.
   # Threads rather than workers: each worker is a full Python process, and one
   # process already covers the CPU request above
   gunicorn:
