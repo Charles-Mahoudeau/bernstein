@@ -45,6 +45,8 @@ MinAvailability = Annotated[
         help="Fail (exit code 3) if any probed URL is below this percentage of successes.",
     ),
 ]
+# Chaos runs accept the loss a node or a Postgres restart cannot avoid (docs/node-failure.md)
+CHAOS_MIN_AVAILABILITY = 99.0
 Tag = Annotated[
     str | None,
     typer.Option("--tag", "-t", help="Image tag. Default: IMAGE_TAG, then the git commit."),
@@ -419,7 +421,7 @@ def chaos_pod(
     ] = False,
     count: Annotated[int, typer.Option("--count", min=1, help="Number of rounds.")] = 1,
     interval: Annotated[float, typer.Option("--interval", help="Seconds between rounds.")] = 10,
-    min_availability: MinAvailability = 100.0,
+    min_availability: MinAvailability = CHAOS_MIN_AVAILABILITY,
 ) -> None:
     """Delete pods and check the app stays available."""
     chaos.delete_pods(
@@ -437,7 +439,7 @@ def chaos_drain(
     ctx: typer.Context,
     node: NodeName = None,
     timeout: Annotated[str, typer.Option("--timeout", help="kubectl drain timeout.")] = "300s",
-    min_availability: MinAvailability = 100.0,
+    min_availability: MinAvailability = CHAOS_MIN_AVAILABILITY,
 ) -> None:
     """Drain a node (graceful maintenance), then uncordon it."""
     chaos.drain(_settings(ctx), node_name=node, timeout=timeout, min_availability=min_availability)
@@ -450,7 +452,7 @@ def chaos_node_kill(
     down_time: Annotated[
         float, typer.Option("--down-time", help="Seconds to keep the node powered off.")
     ] = 120,
-    min_availability: MinAvailability = 100.0,
+    min_availability: MinAvailability = CHAOS_MIN_AVAILABILITY,
 ) -> None:
     """Power off a node's VM (hard failure), then start it again."""
     chaos.kill_node(
@@ -471,7 +473,7 @@ def chaos_bad_release(
         str, typer.Option("--component", "-c", help="Component to break.")
     ] = "poll",
     timeout: HelmTimeout = "90s",
-    min_availability: MinAvailability = 100.0,
+    min_availability: MinAvailability = CHAOS_MIN_AVAILABILITY,
 ) -> None:
     """Deploy a broken release and check Helm rolls it back with no downtime."""
     chaos.bad_release(
