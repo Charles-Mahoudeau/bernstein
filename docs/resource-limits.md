@@ -29,12 +29,12 @@ Every pod except Postgres ends up in the Burstable QoS class (request below limi
 
 ## Values
 
-The cluster is 2 × `Standard_B2s_v2` (2 vCPU, 8 GiB each). Total requests are 0.75 CPU and about 1.3 GiB across all pods (replica counts: [replica-counts.md](replica-counts.md)), so the app uses a small part of the cluster even during a rolling update with surge pods. If one node is drained, the other (2 vCPU, 8 GiB) still holds every request with a large margin.
+The cluster is 2 × `Standard_B2s_v2` (2 vCPU, 8 GiB each). Total requests are 1.15 CPU and about 1.3 GiB across all pods at the minimum replica counts (replica counts: [replica-counts.md](replica-counts.md)), and 1.65 CPU when Poll has scaled to 4 pods ([autoscaling.md](autoscaling.md)). Each node has 1.9 CPU allocatable, and on 2026-10-31 the nodes already carried 1.07 and 1.29 CPU of requests, kube-system included. Whether one node holds everything after a drain was not tested. It is tight at the minimum counts, and with 4 Poll pods a drain would probably leave a pod Pending.
 
 | Component | Replicas | CPU request | Memory request | Memory limit | Why |
 |---|---|---|---|---|---|
-| poll | 2 | 50m | 96Mi | 192Mi | Flask + gunicorn, one process. Measured peak 63MiB. |
-| result | 2 | 100m | 128Mi | 256Mi | Node 24 + Socket.IO. Memory grows with connected viewers: 49MiB at 500. |
+| poll | 2 to 4 | 250m | 96Mi | 192Mi | Flask + gunicorn, one process. Measured peak 63MiB. The CPU request is the base of the autoscaler target, see [autoscaling.md](autoscaling.md). |
+| result | 2 to 3 | 100m | 128Mi | 256Mi | Node 24 + Socket.IO. Memory grows with connected viewers: 49MiB at 500. |
 | worker | 2 | 100m | 128Mi | 512Mi | JVM. Its max heap is 25% of the limit (128MiB), plus metaspace and thread stacks. Measured peak 65MiB, so the request is about twice the usage. |
 | redis | 1 | 50m | 64Mi | 128Mi | Holds the vote queue, which the workers drain immediately. Measured peak 13MiB. |
 | postgres | 1 | 200m (limit 200m) | 512Mi | 512Mi | Guaranteed QoS, so request = limit. `shared_buffers` defaults to 128MB and must fit under the limit. Measured peak 44MiB on a small table. |
